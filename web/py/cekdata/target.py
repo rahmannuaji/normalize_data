@@ -1,4 +1,7 @@
 import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 from scipy import stats
 
 GOALS = ("correlation", "regression", "ttest_ind", "ttest_paired", "anova", "normality_only")
@@ -14,22 +17,22 @@ def _t(label, kind, values, idx, groups_n=None, y=None, model=None):
 
 
 def _regression(scores, y, xs):
-    # OLS lewat numpy (hasil sama dengan statsmodels; statsmodels lokal tidak cocok dengan scipy terpasang)
-    X = np.column_stack([np.ones(len(scores)), scores[xs].to_numpy(float)])
-    yv = scores[y].to_numpy(float)
-    beta = np.linalg.lstsq(X, yv, rcond=None)[0]
-    resid = yv - X @ beta
-    h = np.einsum("ij,ji->i", X, np.linalg.pinv(X))
-    p = X.shape[1]
-    s2 = resid @ resid / (len(yv) - p)
-    std = resid / np.sqrt(s2 * (1 - h))
+    X = scores[xs].astype(float)
+    fit = sm.OLS(scores[y].astype(float), sm.add_constant(X)).fit()
+    infl = fit.get_influence()
     mahal_p = None
     if len(xs) >= 2:
-        d = X[:, 1:] - X[:, 1:].mean(axis=0)
+        d = X.to_numpy() - X.to_numpy().mean(axis=0)
         d2 = np.einsum("ij,jk,ik->i", d, np.linalg.pinv(np.cov(d, rowvar=False)), d)
         mahal_p = stats.chi2.sf(d2, len(xs))
-    model = {"std_resid": std, "cooks": std**2 * h / (p * (1 - h)), "mahal_p": mahal_p, "fitted": yv - resid}
-    return _t(f"Residual regresi: {', '.join(xs)} → {y}", "residual", resid, scores.index, y=y, model=model)
+    model = {"std_resid": np.asarray(infl.resid_studentized_internal), "cooks": np.asarray(infl.cooks_distance[0]),
+             "mahal_p": mahal_p, "fitted": np.asarray(fit.fittedvalues)}
+    return _t(f"Residual regresi: {', '.join(xs)} → {y}", "residual", fit.resid, scores.index, y=y, model=model)
+
+
+def _anova_resid(scores, y):
+    d = pd.DataFrame({"y": scores[y].astype(float), "g": scores["__group"].astype(str)})
+    return smf.ols("y ~ C(g)", d).fit().resid
 
 
 def build_targets(scores, variables, goal):
@@ -61,5 +64,5 @@ def build_targets(scores, variables, goal):
     if k < 3:
         raise GoalError(f"ANOVA butuh kolom kelompok dengan minimal 3 kelompok (sekarang {k}).")
     n = [int((g == lv).sum()) for lv in levels]
-    return [_t(f"Residual ANOVA: {y} ~ kelompok", "residual", scores[y] - scores.groupby(g)[y].transform("mean"),
+    return [_t(f"Residual ANOVA: {y} ~ kelompok", "residual", _anova_resid(scores, y),
                scores.index, n, y) for y in ys]
