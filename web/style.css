@@ -215,7 +215,8 @@ details > div { padding: 0 14px 14px; }
 .chart .bar { fill: var(--brand); fill-opacity: .55; }
 .chart .bar.tail { fill: var(--bad); fill-opacity: .85; }
 .chart .curve { fill: none; stroke: var(--ink); stroke-width: 2; }
-.chart .tick { font: 500 12px var(--font-body); fill: var(--muted); text-anchor: middle; }
+.ticks { position: relative; height: 16px; font: 500 12px/16px var(--font-body); color: var(--muted); }
+.ticks span { position: absolute; top: 0; transform: translateX(-50%); }
 .feats { margin-top: var(--space-2xl); }
 .feat { display: flex; gap: 12px; align-items: flex-start; }
 .feat > .ic { width: 22px; height: 22px; color: var(--brand); margin-top: 1px; }
@@ -239,5 +240,3 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
-/* SVG skala ~0,86 di 375px: 17 satuan viewBox ≈ 14,6px, tetap ≥12px sampai ~320px */
-@media (max-width: 480px) { .chart .tick { font-size: 17px; } }
