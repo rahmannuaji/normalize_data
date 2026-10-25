@@ -160,3 +160,12 @@ def test_export_scores_full_rows_with_exclusion_and_transform():
     assert e["columns"] == ["Baris", "Y1", "X1", "Y1 (transformasi)"]
     assert len(e["rows"]) == 146 and all(r[0] != 12 for r in e["rows"])
     assert call("export_scores", transformed=False)["columns"] == ["Baris", "Y1", "X1"]
+
+
+def test_report_with_two_x_mentions_both_labels():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet="")
+    X2 = {**X, "name": "X2", "columns": [f"S{i}" for i in range(1, 6)]}
+    call("prepare", variables=[Y, X, X2], group=None); call("check", goal="regression", alpha=0.05)
+    call("remedy", kind="alternative")
+    txt = call("report", chosen_id="bootstrap")["text"]
+    assert "X1 → Y1: statistik" in txt and "X2 → Y1: statistik" in txt

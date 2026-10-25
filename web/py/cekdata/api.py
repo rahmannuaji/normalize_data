@@ -205,7 +205,8 @@ def report(chosen_id=None):
     _need("scores")
     _need("checks")
     alts = _S["alternatives"]["alternatives"] if _S["alternatives"] else []
-    chosen = next((a for a in alts if a["id"] == chosen_id), None) if chosen_id else None
+    chosen = [a for a in alts if a["id"] == chosen_id] if chosen_id else []
+    chosen = chosen or None
     tr = None if chosen else _S["transform"]  # alternatif dijalankan pada data tanpa transformasi
     after = _checks(_work(not chosen), not chosen and tr is not None) if (tr or _S["excluded"]) else []
     return rp.build_report({"goal": _S["goal"], "checks": _S["checks"], "fixes": _S["fixes"], "excluded": _S["excluded"],

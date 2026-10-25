@@ -106,7 +106,7 @@ function needText() {
 const fillNeed = (body) => body.append(h("p", {}, needText()), h("p", { class: "caption" }, "Rujukan: Kim (2013); Ghasemi & Zahediasl (2012). Lihat daftar di langkah 7."));
 
 // ---------- Kartu 3: uji alternatif ----------
-function resultCard(r, canPick) {
+function resultCard(r, canPick, many) {
   const picked = state.chosenId === r.id;
   const lines = [];
   if (r.stat != null) lines.push(h("div", {}, h("b", {}, `${STAT[r.id] || "Statistik"} = ${fmt(r.stat, 2)}`), r.p != null ? `, p ${r.p < 0.001 ? fmtP(r.p) : "= " + fmtP(r.p)}` : ""));
@@ -118,7 +118,8 @@ function resultCard(r, canPick) {
   if (r.effect != null) lines.push(h("div", { class: "caption" }, `${r.effect_name}: ${fmt(r.effect, 2)}`));
   const btn = canPick ? h("button", { type: "button", class: `btn small${picked ? "" : " primary"}`, "aria-pressed": String(picked), onclick: () => { state.chosenId = picked ? null : r.id; renderAlt(); } },
     picked ? [icon("circle-check"), "Dipakai di laporan"] : "Pakai ini di laporan") : null;
-  return h("div", { class: `card${picked ? " picked" : ""}` }, h("div", { class: "caption" }, r.name), r.recommended ? h("div", {}, pill("ok", "circle-check", "Dianjurkan")) : null, ...lines, btn);
+  const all = canPick && many ? h("div", { class: "caption" }, "Berlaku untuk semua pasangan variabel.") : null;
+  return h("div", { class: `card${picked ? " picked" : ""}` }, h("div", { class: "caption" }, r.name), r.recommended ? h("div", {}, pill("ok", "circle-check", "Dianjurkan")) : null, ...lines, btn, all);
 }
 
 let altBox;
@@ -131,7 +132,7 @@ function renderAlt() {
     if (labels.length > 1) out.push(h("h3", { class: "target" }, l));
     const par = alt.parametric.filter((r) => r.label === l);
     const alts = alt.alternatives.filter((r) => r.label === l);
-    out.push(h("div", { class: "compare" }, par.map((r) => resultCard(r, false)), alts.map((r) => { const first = !seen.has(r.id); seen.add(r.id); return resultCard(r, first); })));
+    out.push(h("div", { class: "compare" }, par.map((r) => resultCard(r, false, false)), alts.map((r) => { const first = !seen.has(r.id); seen.add(r.id); return resultCard(r, first, labels.length > 1); })));
   });
   if (alt.posthoc?.length) {
     const a = state.checkAlpha;
@@ -178,7 +179,10 @@ function fillTransform(body) {
   function show() {
     btns.forEach((b, i) => { const on = METHODS[i][0] === R.method; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
     out.replaceChildren();
-    if (!R.tr) return;
+    if (!R.tr) {
+      if (R.method) out.append(note("warn", "triangle-alert", `Transformasi ${METHOD_NAME[R.method]} masih aktif, tapi datanya berubah setelah pengeluaran baris. Pilih metode lagi untuk melihat sebelum dan sesudahnya.`));
+      return;
+    }
     const info = R.tr.info;
     if (!info) return out.append(note("info", "info", "Transformasi dibatalkan. Analisis memakai skor aslimu."));
     const list = Object.entries(info).map(([n, i]) => infoLine(n, i));
@@ -189,6 +193,8 @@ function fillTransform(body) {
   }
   async function run(m) {
     try {
+      if (R.method) await call("remedy", { kind: "transform", method: null }); // supaya "sebelum" selalu data tanpa transformasi
+      R.method = null;
       R.tr = await call("remedy", { kind: "transform", method: m });
       R.method = m;
       show();
@@ -247,6 +253,8 @@ function fillExclude(body) {
       R.exRes = res;
       R.resetChosen = !!state.chosenId;
       if (!on) R.sel = {};
+      R.tr = null; // sebelum/sesudah transformasi lama dihitung dari data sebelum pengeluaran
+      trc.reset();
       R.alt = null; // mesin membuang hasil alternatif lama
       state.chosenId = null;
       alt.reset();
@@ -260,7 +268,7 @@ function fillExclude(body) {
 }
 
 // ---------- Langkah 6 ----------
-let alt, exc, root6, root7;
+let alt, exc, trc, root6, root7;
 
 function renderSolutions() {
   if (!state.check) return void root6.replaceChildren(note("info", "info", "Belum ada hasil. Jalankan semua uji di langkah 3 dulu."));
@@ -270,7 +278,8 @@ function renderSolutions() {
   if (findings("data_error", "unreversed_item").length) cards.push(card(0, "Perbaiki salah input dan item yang belum dibalik", "Kembali ke langkah 2", "ok", fillFix));
   cards.push(card(0, "Apakah kamu memang perlu normal?", `n = ${targetN()}`, "ok", fillNeed));
   alt = card(0, "Pakai metode yang tidak butuh normalitas", "Uji alternatif dan bootstrap", "ok", fillAlt);
-  cards.push(alt, card(0, "Transformasi data", "Log, akar kuadrat, kebalikan, Box-Cox, Yeo-Johnson", "warn", fillTransform));
+  trc = card(0, "Transformasi data", "Log, akar kuadrat, kebalikan, Box-Cox, Yeo-Johnson", "warn", fillTransform);
+  cards.push(alt, trc);
   exc = card(0, "Mengeluarkan pencilan", "Hanya dengan alasan yang jelas", "bad", fillExclude);
   cards.push(exc);
   cards.forEach((c, i) => c.el.querySelector(".rank").textContent = String(i + 1));
@@ -281,14 +290,20 @@ function renderSolutions() {
 // ---------- Langkah 7 ----------
 function apaTables() {
   return state.check.map((c, i) => {
-    const rows = c.tests.filter((t) => t.id !== "skew_kurt").map((t) => h("tr", {}, h("td", {}, t.name), h("td", {}, t.skipped_reason || t.stat == null ? "–" : fmt(t.stat, 3)), h("td", {}, String(c.n)), h("td", {}, t.skipped_reason || t.p == null ? "–" : fmtP(t.p))));
+    const rows = c.tests.map((t) => {
+      const sk = t.id === "skew_kurt" && c.moments;
+      const stat = sk ? `${fmt(c.moments.skew)}; ${fmt(c.moments.kurt)}` : t.skipped_reason || t.stat == null ? "–" : fmt(t.stat, 3);
+      return h("tr", {}, h("td", {}, t.name), h("td", {}, stat), h("td", {}, String(c.n)), h("td", {}, sk || t.skipped_reason || t.p == null ? "–" : fmtP(t.p)));
+    });
     return h("div", { class: "apa-box" }, h("table", { class: "apa" }, h("caption", {}, `Tabel ${i + 1}. Hasil uji normalitas ${c.label}`),
       h("thead", {}, h("tr", {}, ["Uji", "Statistik", "n", "p"].map((t) => h("th", {}, t)))), h("tbody", {}, rows)),
       h("p", { class: "caption" }, `Catatan. Taraf signifikansi α = ${fmt(state.checkAlpha)}.`));
   });
 }
 
-const csvCell = (v) => (v == null ? "" : typeof v === "number" ? String(v).replace(".", ",") : /[;"\n\r]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v);
+const quote = (v) => (/[;"\n\r]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v);
+// Teks yang diawali = + - @ tab atau CR diberi awalan ' supaya Excel tidak menjalankannya sebagai rumus.
+const csvCell = (v) => (v == null ? "" : typeof v === "number" ? String(v).replace(".", ",") : quote(/^[=+\-@\t\r]/.test(v) ? "'" + v : v));
 async function downloadCsv() {
   try {
     const d = await call("export_scores", { transformed: !state.chosenId });
@@ -339,7 +354,9 @@ async function renderReport() {
       copyLabel.textContent = "Tersalin";
       setTimeout(() => (copyLabel.textContent = "Salin teks"), 2000);
     } catch {
-      showError("Browser tidak mengizinkan menyalin otomatis. Blok teks laporan, lalu tekan Ctrl+C.");
+      getSelection().selectAllChildren(text);
+      text.scrollIntoView({ block: "nearest" });
+      showError("Browser tidak mengizinkan menyalin otomatis. Teks laporan sudah kami blok, tekan Ctrl+C (Cmd+C di Mac).");
     }
   } }, icon("copy"), copyLabel);
   root7.replaceChildren(

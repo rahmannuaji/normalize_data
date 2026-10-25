@@ -97,10 +97,7 @@ def _fix_par(state):
     return " ".join(parts)
 
 
-def _chosen_par(ch):
-    s = f"Analisis dilanjutkan dengan {ch['name']}"
-    if ch.get("label"):
-        s += f" untuk {ch['label']}"
+def _res_text(ch):
     res = []
     if ch.get("stat") is not None:
         res.append(f"statistik = {fmt_num(ch['stat'], 2)}")
@@ -110,7 +107,21 @@ def _chosen_par(ch):
         res.append(f"CI 95% [{fmt_num(ch['ci'][0], 2)}; {fmt_num(ch['ci'][1], 2)}]")
     if ch.get("effect") is not None:
         res.append(f"{ch.get('effect_name') or 'ukuran efek'} = {fmt_num(ch['effect'], 2)}")
-    return s + (", dengan hasil " + ", ".join(res) if res else "") + "."
+    return ", ".join(res)
+
+
+def _chosen_par(chosen):
+    """chosen: satu hasil atau daftar hasil (satu per pasangan variabel) dengan metode yang sama."""
+    chs = chosen if isinstance(chosen, list) else [chosen]
+    s = f"Analisis dilanjutkan dengan {chs[0]['name']}"
+    if len(chs) == 1:
+        ch = chs[0]
+        if ch.get("label"):
+            s += f" untuk {ch['label']}"
+        r = _res_text(ch)
+        return s + (", dengan hasil " + r if r else "") + "."
+    parts = [f"{c['label']}: {_res_text(c)}" if c.get("label") else _res_text(c) for c in chs]
+    return s + ", dengan hasil " + "; ".join(parts) + "."
 
 
 def build_report(state):
@@ -125,6 +136,7 @@ def build_report(state):
         pars += [p for p in (_after_par(c, what) for c in state.get("after") or []) if p]
     if chosen:
         pars.append(_chosen_par(chosen))
+    chosen = (chosen[0] if chosen else None) if isinstance(chosen, list) else chosen
     keys = ["kim2013", "ghasemi2012"]
     if state.get("goal") == "regression":
         keys.append("midway2025")

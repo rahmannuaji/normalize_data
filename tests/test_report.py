@@ -56,3 +56,10 @@ def test_after_sentence_states_outcome():
     assert "Setelah pengeluaran data, uji Shapiro-Wilk terhadap Skor X menghasilkan W = 0,123, p = 0,200, sehingga data berdistribusi normal." in t
     assert "masih belum berdistribusi normal" in build_report({**base, "after": [bad]})["text"]
     assert "Setelah" not in build_report({**base, "excluded": {}})["text"]
+
+
+def test_chosen_list_reports_every_label():
+    ch = [{"id": "bootstrap", "name": "Bootstrap", "label": f"X{i} → Y1", "stat": 0.4, "p": None, "ci": [0.1, 0.7], "effect": None} for i in (1, 2)]
+    c = {"label": "Residual", "n": 50, "tests": [], "verdict": {"status": "bad", "rule": "n<50"}, "moments": {}, "findings": []}
+    txt = build_report({"goal": "regression", "checks": [c], "fixes": [], "excluded": {}, "transform": None, "chosen": ch})["text"]
+    assert "X1 → Y1: statistik" in txt and "X2 → Y1: statistik" in txt
