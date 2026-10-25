@@ -89,7 +89,8 @@ def _checks(scores, transformed):
         y = t["y"] or t["label"]
         rng = None if transformed else ranges.get(y)
         yv = scores.loc[[r - 1 for r in t["rows"]], t["y"]].to_numpy() if t["kind"] == "residual" else t["values"]
-        c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, warns) if c["moments"] else []
+        mine = [w for w in warns if "row" not in w or w["row"] in t["rows"]]  # tiap target hanya memuat barisnya sendiri
+        c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, mine) if c["moments"] else []
         for f in c["findings"]:
             f["table"] = _row_table(t, scores, f["rows"]) if f["rows"] else None
         out.append(c)
@@ -99,6 +100,9 @@ def _checks(scores, transformed):
 def _row_table(t, scores, rows):
     """Tabel baris terkait temuan: regresi -> Y, X, residual terstandar, Cook's D; lainnya -> nilai yang diuji."""
     pos = {r: i for i, r in enumerate(t["rows"])}
+    rows = [r for r in rows if r in pos]
+    if not rows:
+        return None
     mod, y = t.get("model"), t["y"]
     xs = [v["name"] for v in _S["variables"] if v["role"] == "X"]
     rd = lambda v: None if pd.isna(v) else round(float(v), 3)

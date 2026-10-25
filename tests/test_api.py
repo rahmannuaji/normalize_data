@@ -129,3 +129,23 @@ def test_prepare_reports_group_sizes():
     g = call("prepare", variables=[Y, X], group="JK")["groups"]
     assert set(g) == {"L", "P"} and sum(g.values()) == 147
     assert call("prepare", variables=[Y, X], group=None)["groups"] is None
+
+
+def test_ttest_ind_on_unfixed_example_lists_rows_per_group():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    call("prepare", variables=[Y, X], group="JK")
+    r = call("check", goal="ttest_ind", alpha=0.05)
+    assert "error" not in r
+    hits = [t["label"] for t in r["targets"] if any(f["id"] == "data_error" for f in t["findings"])]
+    assert len(hits) == 1
+
+
+def test_verdict_override_flag():
+    import numpy as np
+    from cekdata import normality as nm
+    x = np.random.default_rng(3).gamma(2.0, size=200)
+    t = {"label": "g", "values": x, "rows": list(range(1, 201)), "groups_n": [100, 100]}
+    assert nm.check_target({**t, "groups_n": None}, "ttest_ind", 0.05)["verdict"]["status"] == "bad"
+    v = nm.check_target(t, "ttest_ind", 0.05)["verdict"]
+    assert v["status"] == "warn" and v["override"] == "kelompok_besar"
+    assert nm.check_target({**t, "groups_n": None}, "ttest_ind", 0.05)["verdict"]["override"] is None

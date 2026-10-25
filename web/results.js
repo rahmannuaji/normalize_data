@@ -181,11 +181,13 @@ function resultPanel(c) {
   const whyCard = h("div", { class: "card" },
     h("h3", {}, "Kenapa kesimpulannya begini?"),
     h("p", { class: "small" }, RULE[v.rule]),
+    v.override ? h("p", { class: "small" }, h("b", {}, "Kenapa kuning? "), "Uji formal menolak, tapi setiap kelompok berisi ≥ 30 responden sehingga uji-t/ANOVA cukup tahan terhadap penyimpangan ini.") : null,
     m.skew != null ? h("p", { class: "small" }, `Skewness ${fmt(m.skew)} (z = ${fmt(m.z_skew, 1)}) · kurtosis ${fmt(m.kurt)} (z = ${fmt(m.z_kurt, 1)})`) : null,
     h("p", { class: "small" }, h("b", {}, `${v.rejected} dari ${v.total} uji`), " menolak normalitas. Angka ini hanya informasi tambahan; kesimpulan mengikuti aturan di atas, bukan voting."));
   const flagged = flaggedPoints(c);
+  const chipBtn = ([row, z]) => h("button", { type: "button", class: "chip sus", onclick: () => pick(out, row, z) }, `Baris ${row}`);
   const chips = flagged.length
-    ? h("div", { class: "chips" }, flagged.slice(0, 12).map(([row, z]) => h("button", { type: "button", class: "chip sus", onclick: () => pick(out, row, z) }, `Baris ${row}`)))
+    ? h("div", { class: "chips" }, flagged.slice(0, 12).map(chipBtn), flagged.length > 12 ? h("button", { type: "button", class: "btn small", onclick: (e) => { e.currentTarget.parentNode.replaceChildren(...flagged.map(chipBtn)); } }, `dan ${flagged.length - 12} lainnya, tampilkan semua`) : null)
     : h("p", { class: "caption" }, `Tidak ada titik dengan |z| > ${fmt(Z_FLAG, 1)}.`);
   const chart = (cls, title, help, ...extra) => h("div", { class: "card" }, ...titleWithHelp(title, help), h("div", { class: `chart-box ${cls}`, role: "img", "aria-label": title }), ...extra);
   out.append(
@@ -232,7 +234,7 @@ function testTable(c) {
 }
 
 // ---------- Langkah 5 ----------
-const SEV = { high: ["circle-x", "high"], medium: ["triangle-alert", "medium"], low: ["info", "low"] };
+const SEV = { high: ["circle-x", "high", "Pengaruh besar"], medium: ["triangle-alert", "medium", "Pengaruh sedang"], low: ["info", "low", "Pengaruh kecil"] };
 
 function rowsTable(tb) {
   const body = tb.rows.slice(0, MAX_ROWS).map((r) => h("tr", { class: "flag" }, r.map((x, i) => h("td", {}, i === 0 ? String(x) : trim(x)))));
@@ -254,9 +256,9 @@ function renderCauses() {
       continue;
     }
     out.push(h("div", { class: "card flush" }, c.findings.map((f) => {
-      const [sic, cls] = SEV[f.severity];
+      const [sic, cls, sev] = SEV[f.severity];
       return h("div", { class: "finding" }, h("div", { class: `n ${cls}` }, icon(sic)),
-        h("div", { class: "grow" }, h("h3", {}, f.title), h("p", { class: "small muted" }, f.detail),
+        h("div", { class: "grow" }, h("span", { class: `sev ${cls}` }, sev), h("h3", {}, f.title), h("p", { class: "small muted" }, f.detail),
           f.table ? rowsTable(f.table) : null,
           f.id === "data_error" || f.id === "unreversed_item" ? h("button", { type: "button", class: "btn small", "data-go": "2", style: "margin-top:var(--space-sm)" }, "Periksa di langkah 2") : null));
     })));

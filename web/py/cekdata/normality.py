@@ -125,8 +125,10 @@ def check_target(target, goal, alpha=0.05):
     status, rule = decide_status(n, sw_p, mm["skew"], mm["kurt"], mm["z_skew"], mm["z_kurt"],
                                  goal, target.get("groups_n"), alpha)
     res["tests"], res["moments"] = tests, m
+    base = decide_status(n, sw_p, mm["skew"], mm["kurt"], mm["z_skew"], mm["z_kurt"], goal, None, alpha)[0]
     res["verdict"] = {"status": status, "rule": rule, "reason": _reason(rule, sw_p, mm),
-                      "rejected": sum(t["rejected"] for t in run), "total": len(run)}
+                      "rejected": sum(t["rejected"] for t in run), "total": len(run),
+                      "override": "kelompok_besar" if base != status else None}
 
     order = np.argsort(x, kind="stable")
     z = (x[order] - x.mean()) / x.std(ddof=1)

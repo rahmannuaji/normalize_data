@@ -302,3 +302,8 @@ td .caption { white-space: normal; min-width: 180px; }
 .finding .tablewrap { margin-top: var(--space-sm); }
 h3.target { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin: var(--space-lg) 0 var(--space-sm); }
 .status .btn { display: inline-flex; }
+.pill.skipped { background: var(--surface-sunken); color: var(--muted); border: 1px solid var(--line); }
+.sev { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+.sev.high { color: var(--bad); }
+.sev.medium { color: var(--warn); }
+.sev.low { color: var(--info); }
