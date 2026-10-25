@@ -8,7 +8,14 @@ def read_table(path, sheet=None):
     ext = os.path.splitext(path)[1].lower()
     warnings, sheets = [], []
     if ext == ".csv":
-        df = pd.read_csv(path, sep=None, engine="python", encoding="utf-8-sig")
+        with open(path, encoding="utf-8-sig") as f:
+            header = f.readline()
+        # Pemisah dipilih dari baris header; sniffing pandas salah untuk satu kolom ("Y1" dikira berpemisah "1").
+        sep = next((c for c in (";", "	") if c in header), ",")
+        df = pd.read_csv(path, sep=sep, encoding="utf-8-sig", skip_blank_lines=False)
+        # Baris kosong di tengah dipertahankan (nomor baris tetap sama); hanya yang di ujung dibuang.
+        while len(df) and df.iloc[-1].isna().all():
+            df = df.iloc[:-1]
         for c in df.columns:
             if pd.api.types.is_numeric_dtype(df[c]):
                 continue

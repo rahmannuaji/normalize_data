@@ -257,10 +257,7 @@ async function submitManual() {
   const rows = manual.data.slice();
   while (rows.length && rows[rows.length - 1].every((v) => String(v).trim() === "")) rows.pop();
   if (!rows.length) return showError("Isi minimal satu sel dulu.");
-  const clean = (v) => {
-    const s = String(v ?? "").replace(/[;\n\r\t]/g, " ").trim();
-    return s === "" && cols.length === 1 ? '""' : s; // satu kolom: baris kosong polos dilewati pembaca CSV
-  };
+  const clean = (v) => String(v ?? "").replace(/[;\n\r\t]/g, " ").trim();
   const csv = [cols, ...rows].map((r) => r.map(clean).join(";")).join("\n");
   try {
     const path = await busy(() => writeFile("manual.csv", new TextEncoder().encode(csv)));

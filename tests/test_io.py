@@ -35,3 +35,25 @@ def test_missing_sheet_raises_indonesian(tmp_path):
     pd.DataFrame({"A": [1]}).to_excel(p, sheet_name="Data", index=False)
     with pytest.raises(ValueError, match="tidak ditemukan"):
         read_table(str(p), sheet="Tidak")
+
+
+def _csv(tmp_path, text):
+    p = tmp_path / "d.csv"
+    p.write_text(text, encoding="utf-8")
+    return read_table(str(p))[0]
+
+def test_single_column_csv(tmp_path):
+    df = _csv(tmp_path, "Y1\n3\n5\n7\n")
+    assert list(df.columns) == ["Y1"] and df["Y1"].tolist() == [3, 5, 7]
+
+def test_single_column_interior_blank_kept_as_nan(tmp_path):
+    df = _csv(tmp_path, "Y1\n3\n\n5\n")
+    assert len(df) == 3 and pd.isna(df["Y1"].iloc[1])
+
+def test_trailing_blank_lines_dropped(tmp_path):
+    assert len(_csv(tmp_path, "Y1\n3\n5\n\n\n")) == 2
+    assert len(_csv(tmp_path, "A;B\n1;2\n;\n3;4\n;\n")) == 3
+
+def test_comma_separated(tmp_path):
+    df = _csv(tmp_path, "A,B\n1,2\n")
+    assert list(df.columns) == ["A", "B"] and len(df) == 1
