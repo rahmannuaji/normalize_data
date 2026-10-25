@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cek Normalitas (Mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- MOCKUP: semua angka palsu, tidak ada perhitungan statistik sungguhan -->
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --ink:#1b2333; --muted:#5d6779; --line:#e3e7ef;
+  --brand:#3b5bdb; --brand-soft:#e8edff;
+  --ok:#22702f; --ok-soft:#e6f6ea; --warn:#8a5200; --warn-soft:#fff4dd; --bad:#c92a2a; --bad-soft:#fde8e8;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Plus Jakarta Sans",system-ui,sans-serif}
+a{color:var(--brand)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;gap:12px;height:60px}
+.logo{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--brand);display:grid;place-items:center;color:#fff;font-style:normal;font-size:14px}
+.privacy{margin-left:auto;font-size:12.5px;color:var(--ok);background:var(--ok-soft);padding:5px 10px;border-radius:99px}
+.steps{display:flex;gap:4px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:none}
+.step{flex:1 0 auto;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap;border:0;background:none;font-family:inherit}
+.step b{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:12px;color:var(--muted)}
+.step.done b{background:var(--ok);color:#fff}
+.step.on{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.step.on b{background:var(--brand);color:#fff}
+main{padding:28px 0 60px}
+section.page{display:none}
+section.page.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}
+h2{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}
+h3{font-size:16px;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:#fff;font:600 14.5px "Plus Jakarta Sans",sans-serif;cursor:pointer;color:var(--ink)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.small{padding:6px 12px;font-size:13px}
+.nav{display:flex;justify-content:space-between;margin-top:24px;gap:10px}
+.tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:12px;width:max-content;max-width:100%;overflow-x:auto;margin-bottom:16px}
+.tabs button{border:0;background:none;padding:8px 14px;border-radius:9px;font:600 13.5px "Plus Jakarta Sans",sans-serif;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.drop{border:2px dashed #c6cde0;border-radius:var(--radius);padding:36px 16px;text-align:center;background:#fafbff;cursor:pointer}
+.drop:hover{border-color:var(--brand)}
+.drop .ic{font-size:34px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:#fff}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:#f3f5fa;font-weight:600;color:var(--muted);font-size:12.5px}
+tr.flag td{background:var(--bad-soft)}
+td.flag{background:var(--bad-soft);color:var(--bad);font-weight:700}
+.note{display:flex;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;margin:10px 0}
+.note.warn{background:var(--warn-soft);color:#6b4200}
+.note.info{background:var(--brand-soft);color:#24398f}
+.note.bad{background:var(--bad-soft);color:#7d1a1a}
+.note.ok{background:var(--ok-soft);color:#1d5c2a}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;border:1px solid var(--line);font-size:13px;margin:3px;background:#fff;cursor:pointer;user-select:none}
+.chip.rev{border-color:var(--warn);background:var(--warn-soft)}
+.chip.sus{border-color:var(--bad);background:var(--bad-soft)}
+.opt{border:1.5px solid var(--line);border-radius:var(--radius);padding:16px;cursor:pointer;background:#fff;transition:.15s}
+.opt:hover{border-color:#a8b6ea}
+.opt.on{border-color:var(--brand);background:var(--brand-soft)}
+.opt .em{font-size:24px}
+.opt small{display:block;color:var(--muted);margin-top:4px}
+.status{border-radius:var(--radius);padding:18px;border:1px solid}
+.status.bad{background:var(--bad-soft);border-color:#f3b5b5}
+.status.ok{background:var(--ok-soft);border-color:#b2e0bd}
+.status.warn{background:var(--warn-soft);border-color:#f0d293}
+.status .lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.status .big{font-size:20px;font-weight:800;margin:4px 0}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;display:inline-block}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.q{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:var(--line);font-size:11px;color:var(--muted);cursor:help;margin-left:4px}
+details{border:1px solid var(--line);border-radius:10px;background:#fff;margin-top:12px}
+summary{padding:12px 14px;cursor:pointer;font-weight:600}
+details>div{padding:0 14px 14px}
+svg text{font-family:"Plus Jakarta Sans",sans-serif}
+.finding{display:flex;gap:14px;align-items:flex-start;padding:16px;border-bottom:1px solid var(--line)}
+.finding:last-child{border-bottom:0}
+.finding .n{flex:0 0 34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+.sol{border:1px solid var(--line);border-radius:var(--radius);background:#fff;margin-bottom:12px;overflow:hidden}
+.sol .hd{display:flex;gap:12px;align-items:center;padding:16px;cursor:pointer}
+.sol .rank{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 30px}
+.sol .body{display:none;padding:0 16px 16px 58px}
+.sol.open .body{display:block}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.report{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;font-family:"Times New Roman",serif;font-size:15.5px;line-height:1.7}
+.ref{font-size:13.5px;color:var(--muted);padding-left:22px;text-indent:-22px;margin:4px 0}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.sol .body{padding-left:16px}}
+.feat{display:flex;gap:12px;align-items:flex-start}
+.feat span{font-size:22px}
+.mock-badge{position:fixed;bottom:12px;right:12px;background:#1b2333;color:#fff;font-size:12px;padding:6px 10px;border-radius:8px;opacity:.85}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo" onclick="go(0)"><i>N</i>Cek Normalitas</div>
+      <div class="privacy">🔒 Data tidak dikirim ke mana pun</div>
+    </div>
+    <nav class="steps" id="steps"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- 0. BERANDA -->
+<section class="page" data-title="Beranda">
+  <div class="hero">
+    <div>
+      <h1>Datamu tidak normal?<br><span style="color:var(--brand)">Tenang, ada jalannya.</span></h1>
+      <p class="sub" style="font-size:17px">Cek normalitas dengan semua metode, lihat bagian mana yang bermasalah, lalu pilih solusi yang sah dan bisa kamu pertanggungjawabkan di depan dosen penguji.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn primary" onclick="go(1)">Mulai cek data →</button>
+        <button class="btn" onclick="go(1);setTab('contoh')">Coba pakai data contoh</button>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin-top:14px">Gratis · Tanpa daftar · Semua dihitung di browsermu</p>
+    </div>
+    <div class="card">
+      <svg id="heroChart" viewBox="0 0 360 200" width="100%"></svg>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:34px">
+    <div class="card feat"><span>📂</span><div><h2 style="font-size:16px;margin:0 0 8px">Upload atau ketik sendiri</h2><span style="font-size:14px;color:var(--muted)">CSV, Excel, atau tempel langsung dari Excel. Item kuesioner bisa langsung dijumlahkan.</span></div></div>
+    <div class="card feat"><span>🔍</span><div><h2 style="font-size:16px;margin:0 0 8px">Tahu letak masalahnya</h2><span style="font-size:14px;color:var(--muted)">Responden mana, item mana, dan kenapa distribusinya menyimpang.</span></div></div>
+    <div class="card feat"><span>📝</span><div><h2 style="font-size:16px;margin:0 0 8px">Siap tempel ke Bab IV</h2><span style="font-size:14px;color:var(--muted)">Paragraf interpretasi, tabel, dan rujukan untuk tiap keputusan.</span></div></div>
+  </div>
+</section>
+
+<!-- 1. DATA -->
+<section class="page" data-title="Data">
+  <h2>Masukkan datamu</h2>
+  <p class="sub">Pilih salah satu cara. Datamu tetap di laptopmu.</p>
+  <div class="tabs" id="dataTabs">
+    <button data-t="upload" class="on">📂 Upload file</button>
+    <button data-t="ketik">⌨️ Ketik sendiri</button>
+    <button data-t="contoh">🧪 Pakai contoh</button>
+  </div>
+  <div data-tab="upload">
+    <div class="drop" onclick="showPreview()">
+      <div class="ic">📄</div>
+      <b>Seret file ke sini atau klik untuk memilih</b>
+      <div style="color:var(--muted);font-size:13px">.csv, .xlsx, .xls · baris pertama berisi nama kolom</div>
+    </div>
+  </div>
+  <div data-tab="ketik" hidden>
+    <div class="card">
+      <div class="grid g3">
+        <label>Jumlah variabel Y<br><select class="btn" style="width:100%"><option>1</option><option>2</option><option>3</option></select></label>
+        <label>Jumlah variabel X<br><select class="btn" style="width:100%"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+        <label>Jumlah responden<br><input class="btn" style="width:100%" value="30"></label>
+      </div>
+      <div class="tablewrap" style="margin-top:14px">
+        <table><tr><th>#</th><th>Y1</th><th>X1</th><th>X2</th></tr>
+        <tr><td>1</td><td contenteditable>42</td><td contenteditable>38</td><td contenteditable>27</td></tr>
+        <tr><td>2</td><td contenteditable>47</td><td contenteditable>41</td><td contenteditable>30</td></tr>
+        <tr><td>3</td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr></table>
+      </div>
+      <p style="font-size:13px;color:var(--muted)">💡 Bisa langsung Ctrl+V dari Excel.</p>
+    </div>
+  </div>
+  <div data-tab="contoh" hidden>
+    <div class="grid g2">
+      <div class="opt on" onclick="showPreview()"><div class="em">🧠</div><b>Kuesioner psikologi (150 responden)</b><small>Dukungan sosial → kesejahteraan psikologis. Ada efek plafon dan satu item belum dibalik.</small></div>
+      <div class="opt" onclick="showPreview()"><div class="em">📊</div><b>Pretest–posttest (40 siswa)</b><small>Data berpasangan, cocok untuk mencoba uji Wilcoxon.</small></div>
+    </div>
+  </div>
+  <div id="preview" hidden style="margin-top:18px">
+    <div class="note ok">✅ <span><b>kuesioner_skripsi.xlsx</b> terbaca: 150 baris, 21 kolom (sheet "Data").</span></div>
+    <div class="note warn">⚠️ <span>Kolom <b>P3</b> memakai koma desimal ("3,5"). Sudah otomatis dibaca sebagai angka.</span></div>
+    <div class="tablewrap"><table id="prevTable"></table></div>
+  </div>
+  <div class="nav"><button class="btn" onclick="go(0)">← Kembali</button><button class="btn primary" onclick="go(2)">Lanjut: atur variabel →</button></div>
+</section>
+
+<!-- 2. VARIABEL -->
+<section class="page" data-title="Variabel">
+  <h2>Atur variabel</h2>
+  <p class="sub">Tentukan kolom mana yang jadi Y dan X. Kalau datamu berupa item kuesioner, pilih item-itemnya dan kami jumlahkan.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3>Y1 · Kesejahteraan Psikologis</h3><span class="pill ok">Dependen</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Gabungan 10 item · dijumlahkan · skala 1–5</div>
+      <div id="chipsY"></div>
+      <div class="note bad">🚩 <span><b>P7</b> berkorelasi negatif dengan total (r = −0,21). Kemungkinan item unfavorable yang belum dibalik. <button class="btn small" onclick="reverseP7(this)">Balik skor P7</button></span></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3>X1 · Dukungan Sosial</h3><span class="pill warn">Independen</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Gabungan 10 item · dijumlahkan · skala 1–5</div>
+      <div id="chipsX"></div>
+      <div class="note warn">⚠️ <span>Baris <b>87</b> berisi nilai <b>55</b> di S4 (di luar skala 1–5). Mungkin salah ketik "5". <a href="#">Lihat baris</a></span></div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--muted)">Klik item untuk menandai <span class="chip rev" style="cursor:default">↺ unfavorable</span>. Skornya dibalik: 1↔5, 2↔4.</p>
+  <button class="btn small">＋ Tambah variabel X</button> <button class="btn small">＋ Tambah kolom kelompok</button>
+  <div class="note info" style="margin-top:14px">ℹ️ <span>3 baris punya sel kosong dan tidak diikutkan. Responden yang dianalisis: <b>147</b>.</span></div>
+  <div class="nav"><button class="btn" onclick="go(1)">← Kembali</button><button class="btn primary" onclick="go(3)">Lanjut: pilih tujuan →</button></div>
+</section>
+
+<!-- 3. TUJUAN -->
+<section class="page" data-title="Tujuan">
+  <h2>Kamu mau menganalisis apa?</h2>
+  <p class="sub">Ini menentukan <b>apa yang sebenarnya harus normal</b>. Tiap analisis punya syarat yang berbeda.</p>
+  <div class="grid g3" id="goals">
+    <div class="opt"><div class="em">🔗</div><b>Hubungan dua variabel</b><small>Korelasi Pearson · yang dicek: tiap variabel</small></div>
+    <div class="opt on"><div class="em">➡️</div><b>Pengaruh X terhadap Y</b><small>Regresi linear · yang dicek: <b>residual</b></small></div>
+    <div class="opt"><div class="em">⚖️</div><b>Bandingkan 2 kelompok</b><small>Uji-t independen · yang dicek: tiap kelompok</small></div>
+    <div class="opt"><div class="em">🔁</div><b>Sebelum vs sesudah</b><small>Uji-t berpasangan · yang dicek: selisihnya</small></div>
+    <div class="opt"><div class="em">🧩</div><b>Bandingkan &gt;2 kelompok</b><small>ANOVA satu arah · yang dicek: residual</small></div>
+    <div class="opt"><div class="em">🔎</div><b>Cuma mau cek normalitas</b><small>Tiap variabel yang dipilih</small></div>
+  </div>
+  <div class="note info" style="margin-top:16px">💡 <span><b>Tahukah kamu?</b> Untuk regresi, yang harus normal adalah <b>residual</b>, bukan data X atau Y. Lebih dari 70% paper ekologi keliru di sini (Midway &amp; White, 2025).</span></div>
+  <div class="nav"><button class="btn" onclick="go(2)">← Kembali</button><button class="btn primary" onclick="go(4)">Jalankan semua uji →</button></div>
+</section>
+
+<!-- 4. HASIL -->
+<section class="page" data-title="Hasil">
+  <h2>Hasil uji normalitas</h2>
+  <p class="sub">Regresi: Dukungan Sosial → Kesejahteraan Psikologis · n = 147</p>
+  <div class="grid g2">
+    <div class="status bad">
+      <div class="lbl" style="color:var(--bad)">⛔ Residual regresi</div>
+      <div class="big">Tidak normal</div>
+      <div style="font-size:14px">Shapiro-Wilk p = 0,001. Residual miring ke kiri (skewness −1,12; z = −5,6). Banyak responden memberi skor tertinggi.</div>
+      <button class="btn small primary" style="margin-top:10px" onclick="go(5)">Lihat penyebabnya →</button>
+    </div>
+    <div class="card">
+      <h3>Kenapa kesimpulannya begini?</h3>
+      <div style="font-size:14px;color:var(--muted)">Untuk n antara 50 dan 300, kami memakai <b>Shapiro-Wilk</b> ditambah <b>z-skewness/z-kurtosis</b> (batas |z| &lt; 3,29; Kim, 2013). Hasilnya tidak ditentukan dari voting jumlah uji.</div>
+      <div style="margin-top:10px;font-size:14px"><b>5 dari 7</b> uji menolak normalitas.</div>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>Histogram residual <span class="q" title="Batang = data kamu. Garis = bentuk distribusi normal yang ideal.">?</span></h3><svg id="hist" viewBox="0 0 360 220" width="100%"></svg></div>
+    <div class="card"><h3>Q-Q plot <span class="q" title="Kalau normal, titik mengikuti garis. Titik merah = paling menyimpang, klik untuk melihat barisnya.">?</span></h3><svg id="qq" viewBox="0 0 360 220" width="100%"></svg><div id="qqInfo" style="font-size:13px;color:var(--muted)">Klik titik merah untuk melihat respondennya.</div></div>
+  </div>
+  <details open>
+    <summary>Semua uji (7)</summary>
+    <div class="tablewrap"><table>
+      <tr><th>Uji</th><th>Statistik</th><th>p</th><th>Hasil</th><th>Artinya</th></tr>
+      <tr><td>Shapiro-Wilk <span class="q" title="Paling dianjurkan untuk sampel kecil sampai menengah.">?</span></td><td>0,962</td><td>0,001</td><td><span class="pill bad">Tidak normal</span></td><td>Uji utama untuk n = 147</td></tr>
+      <tr><td>Kolmogorov-Smirnov (Lilliefors)</td><td>0,094</td><td>0,003</td><td><span class="pill bad">Tidak normal</span></td><td>Versi KS yang benar</td></tr>
+      <tr><td>Kolmogorov-Smirnov klasik (SPSS)</td><td>0,094</td><td>0,148</td><td><span class="pill ok">Normal</span></td><td>⚠️ Terlalu longgar, sebaiknya tidak dipakai</td></tr>
+      <tr><td>Anderson-Darling</td><td>1,48</td><td>0,001</td><td><span class="pill bad">Tidak normal</span></td><td>Peka terhadap ekor</td></tr>
+      <tr><td>Jarque-Bera</td><td>34,2</td><td>&lt;0,001</td><td><span class="pill bad">Tidak normal</span></td><td>Dari skewness &amp; kurtosis</td></tr>
+      <tr><td>D'Agostino-Pearson K²</td><td>21,7</td><td>&lt;0,001</td><td><span class="pill bad">Tidak normal</span></td><td>Gabungan skewness &amp; kurtosis</td></tr>
+      <tr><td>Skewness / Kurtosis (z)</td><td>−1,12 / 0,84</td><td>z = −5,6 / 2,1</td><td><span class="pill warn">Skewness menyimpang</span></td><td>Kurtosis masih aman</td></tr>
+    </table></div>
+  </details>
+  <div class="nav"><button class="btn" onclick="go(3)">← Kembali</button><button class="btn primary" onclick="go(5)">Kenapa tidak normal? →</button></div>
+</section>
+
+<!-- 5. PENYEBAB -->
+<section class="page" data-title="Penyebab">
+  <h2>Kenapa datamu tidak normal?</h2>
+  <p class="sub">Kami menemukan 3 hal. Diurutkan dari yang paling berpengaruh.</p>
+  <div class="card" style="padding:0">
+    <div class="finding"><div class="n" style="background:var(--bad-soft)">📈</div><div><h3>Efek plafon: 24% responden memberi skor hampir maksimal</h3><div style="font-size:14px;color:var(--muted)">36 dari 147 responden mendapat skor Y ≥ 46 dari maksimum 50. Data menumpuk di ujung kanan, ekor panjang di kiri. Ini sering terjadi pada skala yang item-itemnya mudah disetujui (efek keinginan sosial).</div></div></div>
+    <div class="finding"><div class="n" style="background:var(--warn-soft)">🎯</div><div><h3>4 responden dengan residual ekstrem</h3><div style="font-size:14px;color:var(--muted)">Baris 12, 58, 87, dan 131 punya residual terstandar &lt; −3. Baris 87 juga punya nilai di luar skala (lihat langkah 2).</div>
+      <div class="tablewrap" style="margin-top:10px"><table>
+        <tr><th>Baris</th><th>Y</th><th>X1</th><th>Residual terstandar</th><th>Cook's D</th><th>Dugaan</th></tr>
+        <tr class="flag"><td>12</td><td>18</td><td>41</td><td>−3,42</td><td>0,061</td><td>Nilai asli, mungkin menjawab asal?</td></tr>
+        <tr class="flag"><td>58</td><td>21</td><td>44</td><td>−3,18</td><td>0,048</td><td>Nilai asli</td></tr>
+        <tr class="flag"><td>87</td><td>15</td><td>47</td><td>−3,90</td><td>0,112</td><td>Salah input (S4 = 55)</td></tr>
+        <tr class="flag"><td>131</td><td>19</td><td>39</td><td>−3,05</td><td>0,033</td><td>Nilai asli</td></tr>
+      </table></div></div></div>
+    <div class="finding"><div class="n" style="background:var(--warn-soft)">↺</div><div><h3>Item P7 kemungkinan belum dibalik</h3><div style="font-size:14px;color:var(--muted)">Kalau P7 memang unfavorable, membaliknya akan mengubah skor total. Kembali ke langkah 2 untuk memperbaikinya.</div></div></div>
+  </div>
+  <div class="nav"><button class="btn" onclick="go(4)">← Kembali</button><button class="btn primary" onclick="go(6)">Lihat solusi →</button></div>
+</section>
+
+<!-- 6. SOLUSI -->
+<section class="page" data-title="Solusi">
+  <h2>Pilihan solusi</h2>
+  <p class="sub">Urut dari yang paling dianjurkan. Klik untuk membuka dan menjalankan.</p>
+
+  <div class="sol open"><div class="hd"><div class="rank">1</div><div style="flex:1"><b>Perbaiki salah input dan item yang belum dibalik</b><br><span style="font-size:13px;color:var(--muted)">Baris 87 (S4 = 55) dan item P7</span></div><span class="pill ok">Dianjurkan</span></div>
+    <div class="body">Ini bukan manipulasi, karena kamu memperbaiki kesalahan. Cek ke kuesioner asli dulu, lalu uji ulang.
+      <div class="note ok" style="margin-top:10px">Setelah diperbaiki: Shapiro-Wilk p = 0,012. Masih tidak normal, tapi skewness turun ke −0,78.</div>
+      <button class="btn small primary">Terapkan &amp; uji ulang</button></div></div>
+
+  <div class="sol"><div class="hd"><div class="rank">2</div><div style="flex:1"><b>Apakah kamu memang perlu residual normal?</b><br><span style="font-size:13px;color:var(--muted)">n = 147 cukup besar, uji koefisien regresi relatif tahan</span></div><span class="pill ok">Dianjurkan</span></div>
+    <div class="body">Dengan n &gt; 100, uji-t koefisien regresi biasanya tetap akurat walaupun residual tidak normal (teorema limit pusat). Tetap laporkan, dan perkuat dengan solusi 3.</div></div>
+
+  <div class="sol open"><div class="hd"><div class="rank">3</div><div style="flex:1"><b>Pakai metode yang tidak butuh normalitas</b><br><span style="font-size:13px;color:var(--muted)">Regresi dengan bootstrap CI (5.000 sampel) atau Spearman</span></div><span class="pill ok">Dianjurkan</span></div>
+    <div class="body">
+      <div class="compare">
+        <div class="card"><div class="lbl" style="font-size:12px;color:var(--muted)">REGRESI BIASA (OLS)</div><b>β = 0,48</b>, p &lt; 0,001<br><span style="font-size:13px;color:var(--muted)">95% CI [0,34; 0,62]</span></div>
+        <div class="card" style="border-color:var(--ok)"><div class="lbl" style="font-size:12px;color:var(--ok)">BOOTSTRAP</div><b>β = 0,48</b><br><span style="font-size:13px;color:var(--muted)">95% CI [0,31; 0,66], tidak melewati 0</span></div>
+        <div class="card"><div class="lbl" style="font-size:12px;color:var(--muted)">SPEARMAN</div><b>ρ = 0,44</b>, p &lt; 0,001<br><span style="font-size:13px;color:var(--muted)">Hubungan positif sedang</span></div>
+      </div>
+      <div class="note ok">✅ Kesimpulannya sama: dukungan sosial berpengaruh positif terhadap kesejahteraan psikologis.</div></div></div>
+
+  <div class="sol"><div class="hd"><div class="rank">4</div><div style="flex:1"><b>Transformasi data</b><br><span style="font-size:13px;color:var(--muted)">Refleksi + log, Box-Cox, atau Yeo-Johnson</span></div><span class="pill warn">Boleh, dengan catatan</span></div>
+    <div class="body">Setelah Yeo-Johnson: Shapiro-Wilk p = 0,21 (normal). <b>Catatan:</b> yang kamu analisis jadi skor hasil transformasi, sehingga interpretasi β tidak lagi dalam satuan skor asli.</div></div>
+
+  <div class="sol"><div class="hd"><div class="rank">5</div><div style="flex:1"><b>Mengeluarkan outlier</b><br><span style="font-size:13px;color:var(--muted)">Hanya dengan alasan yang jelas</span></div><span class="pill bad">Hati-hati</span></div>
+    <div class="body">Pilih alasan untuk tiap baris (salah input / menjawab asal / di luar populasi). Kami tampilkan hasil dengan dan tanpa outlier berdampingan, dan laporan mencatat jumlah serta alasannya.
+      <div class="note bad">🚫 Kami tidak menyediakan "hapus otomatis sampai normal". Itu termasuk manipulasi data.</div></div></div>
+
+  <div class="nav"><button class="btn" onclick="go(5)">← Kembali</button><button class="btn primary" onclick="go(7)">Buat laporan →</button></div>
+</section>
+
+<!-- 7. LAPORAN -->
+<section class="page" data-title="Laporan">
+  <h2>Laporan siap tempel</h2>
+  <p class="sub">Salin ke Bab IV, lalu sesuaikan gaya bahasanya.</p>
+  <div class="report" id="reportText">
+    Uji normalitas dilakukan terhadap residual model regresi dukungan sosial terhadap kesejahteraan psikologis (<i>n</i> = 147) menggunakan uji Shapiro-Wilk serta nilai <i>z</i> skewness dan kurtosis. Hasil menunjukkan residual tidak berdistribusi normal, <i>W</i> = 0,962, <i>p</i> = 0,001, dengan kemiringan negatif (skewness = −1,12; <i>z</i> = −5,60) yang disebabkan oleh efek plafon pada skala kesejahteraan psikologis. Satu data salah input (responden 87) telah diperbaiki sesuai lembar jawaban asli.<br><br>
+    Karena asumsi normalitas residual tidak terpenuhi, estimasi interval kepercayaan koefisien regresi dilakukan dengan metode <i>bootstrap</i> (5.000 sampel ulang). Hasil menunjukkan dukungan sosial berpengaruh positif terhadap kesejahteraan psikologis, β = 0,48, 95% CI [0,31; 0,66].
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+    <button class="btn primary" onclick="copyReport(this)">📋 Salin teks</button>
+    <button class="btn">⬇️ Unduh data hasil (CSV)</button>
+    <button class="btn" onclick="window.print()">🖨️ Cetak / simpan PDF</button>
+  </div>
+  <h3 style="margin-top:24px">Rujukan untuk keputusanmu</h3>
+  <p class="ref">Kim, H.-Y. (2013). Statistical notes for clinical researchers: Assessing normal distribution (2) using skewness and kurtosis. <i>Restorative Dentistry &amp; Endodontics, 38</i>(1), 52–54.</p>
+  <p class="ref">Ghasemi, A., &amp; Zahediasl, S. (2012). Normality tests for statistical analysis: A guide for non-statisticians. <i>International Journal of Endocrinology and Metabolism, 10</i>(2), 486–489.</p>
+  <p class="ref">Midway, S. R., &amp; White, J. W. (2025). Testing for normality in regression models: Mistakes abound (but may not matter). <i>Royal Society Open Science</i>.</p>
+  <div class="nav"><button class="btn" onclick="go(6)">← Kembali</button><button class="btn" onclick="go(0)">Selesai, ke beranda</button></div>
+</section>
+
+</main>
+<div class="mock-badge">MOCKUP · data palsu</div>
+
+<script>
+const pages=[...document.querySelectorAll('section.page')];
+const stepsEl=document.getElementById('steps');
+let cur=0;
+pages.forEach((p,i)=>{ if(!i) return;
+  const b=document.createElement('button'); b.className='step'; b.innerHTML=`<b>${i}</b>${p.dataset.title}`; b.onclick=()=>go(i); stepsEl.appendChild(b);});
+function go(i){cur=i;pages.forEach((p,j)=>p.classList.toggle('on',j===i));
+  [...stepsEl.children].forEach((b,j)=>{b.classList.toggle('on',j+1===i);b.classList.toggle('done',j+1<i);});
+  stepsEl.style.display=i?'flex':'none'; scrollTo({top:0,behavior:'smooth'});}
+go(0);
+
+// Tab data
+function setTab(t){document.querySelectorAll('#dataTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('[data-tab]').forEach(d=>d.hidden=d.dataset.tab!==t);}
+document.querySelectorAll('#dataTabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+function showPreview(){const t=document.getElementById('prevTable');
+  const cols=['No','P1','P2','P3','P4','P5','…','S1','S2','S3','S4','…'];
+  let h='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  [[1,5,4,'3,5',5,4,'…',4,5,4,5,'…'],[2,4,4,4,5,5,'…',3,4,4,4,'…'],[3,5,5,5,5,5,'…',5,5,5,5,'…'],[87,2,1,2,1,2,'…',5,5,4,55,'…']]
+   .forEach(r=>h+='<tr>'+r.map(v=>`<td class="${v===55?'flag':''}">${v}</td>`).join('')+'</tr>');
+  t.innerHTML=h; document.getElementById('preview').hidden=false;}
+
+// Chip item
+function chips(id,prefix){const el=document.getElementById(id);
+  for(let i=1;i<=10;i++){const c=document.createElement('span');c.className='chip'+(prefix==='P'&&i===7?' sus':'');
+    c.textContent=prefix+i;c.onclick=()=>{c.classList.toggle('rev');c.classList.remove('sus');c.textContent=prefix+i+(c.classList.contains('rev')?' ↺':'');};el.appendChild(c);}}
+chips('chipsY','P');chips('chipsX','S');
+function reverseP7(btn){const c=[...document.querySelectorAll('#chipsY .chip')][6];c.className='chip rev';c.textContent='P7 ↺';
+  btn.closest('.note').className='note ok';btn.closest('span').innerHTML='✅ <b>P7</b> sudah dibalik. Korelasi item-total sekarang r = 0,46.';}
+
+// Opsi tujuan
+document.querySelectorAll('#goals .opt').forEach(o=>o.onclick=()=>{document.querySelectorAll('#goals .opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');});
+document.querySelectorAll('.sol .hd').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('open'));
+function copyReport(b){navigator.clipboard?.writeText(document.getElementById('reportText').innerText);b.textContent='✅ Tersalin';}
+
+// Data palsu: residual miring kiri (efek plafon), deterministik
+let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+const gauss=()=>Math.sqrt(-2*Math.log(rnd()))*Math.cos(2*Math.PI*rnd());
+const res=Array.from({length:143},()=>{const g=gauss();return g>0?g*0.6:g*1.3}).concat([-3.42,-3.18,-3.9,-3.05]);
+const m=res.reduce((a,b)=>a+b)/res.length, sd=Math.sqrt(res.reduce((a,b)=>a+(b-m)**2,0)/(res.length-1));
+const z=res.map(v=>(v-m)/sd);
+// invers normal (aproksimasi Acklam)
+function qnorm(p){const a=[-39.6968302866538,220.946098424521,-275.928510446969,138.357751867269,-30.6647980661472,2.50662827745924],
+ b=[-54.4760987982241,161.585836858041,-155.698979859887,66.8013118877197,-13.2806815528857],
+ c=[-.00778489400243029,-.322396458041136,-2.40075827716184,-2.54973253934373,4.37466414146497,2.93816398269878],
+ d=[.00778469570904146,.32246712907004,2.445134137143,3.75440866190742];
+ const lo=.02425;let q,r;
+ if(p<lo){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+ if(p>1-lo){q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+ q=p-.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+const NS='http://www.w3.org/2000/svg';
+function el(svg,tag,at){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);svg.appendChild(e);return e;}
+function axes(svg,W,H,P){el(svg,'line',{x1:P,y1:H-P,x2:W-10,y2:H-P,stroke:'#c9cfdc'});el(svg,'line',{x1:P,y1:10,x2:P,y2:H-P,stroke:'#c9cfdc'});}
+function hist(svg,data,W,H){const P=30,lo=-4.5,hi=3,bins=15,w=(hi-lo)/bins,cnt=Array(bins).fill(0);
+  data.forEach(v=>{const i=Math.min(bins-1,Math.max(0,Math.floor((v-lo)/w)));cnt[i]++;});
+  const max=Math.max(...cnt)*1.1, X=v=>P+(v-lo)/(hi-lo)*(W-P-10), Y=c=>H-P-c/max*(H-P-10);
+  axes(svg,W,H,P);
+  cnt.forEach((c,i)=>el(svg,'rect',{x:X(lo+i*w)+1,y:Y(c),width:(W-P-10)/bins-2,height:H-P-Y(c),rx:3,fill:lo+i*w< -2.5?'#e57373':'#8fa3ee'}));
+  let d='';for(let v=lo;v<=hi;v+=.05){const y=data.length*w*Math.exp(-v*v/2)/Math.sqrt(2*Math.PI);d+=(d?'L':'M')+X(v)+','+Y(y);}
+  el(svg,'path',{d,fill:'none',stroke:'#1b2333','stroke-width':2});
+  [-4,-2,0,2].forEach(t=>el(svg,'text',{x:X(t),y:H-P+16,'text-anchor':'middle','font-size':11,fill:'#5d6779'}).textContent=t);}
+function qq(svg,data,W,H){const P=30,sorted=data.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v),n=data.length;
+  const X=v=>P+(v+3)/6*(W-P-10),Y=v=>H-P-(v+4.5)/7.5*(H-P-10);axes(svg,W,H,P);
+  el(svg,'line',{x1:X(-3),y1:Y(-3),x2:X(3),y2:Y(3),stroke:'#1b2333','stroke-width':1.5,'stroke-dasharray':'5 4'});
+  const rows=[12,58,87,131];let k=0;
+  sorted.forEach((o,j)=>{const t=qnorm((j+1-.375)/(n+.25)),bad=o.v< -2.8;
+    const c=el(svg,'circle',{cx:X(t),cy:Y(o.v),r:bad?5:3.2,fill:bad?'#c92a2a':'#3b5bdb','fill-opacity':bad?1:.6,style:bad?'cursor:pointer':''});
+    if(bad){const row=rows[k++%4];c.onclick=()=>document.getElementById('qqInfo').innerHTML=`<b style="color:#c92a2a">Responden baris ${row}</b>: residual terstandar ${o.v.toFixed(2)}. <a href="#" onclick="go(5);return false">Lihat detail →</a>`;}});
+  el(svg,'text',{x:W/2,y:H-4,'text-anchor':'middle','font-size':11,fill:'#5d6779'}).textContent='Kuantil teoretis (normal)';}
+hist(document.getElementById('hist'),z,360,220);
+qq(document.getElementById('qq'),z,360,220);
+hist(document.getElementById('heroChart'),z,360,200);
+</script>
+</body>
+</html>

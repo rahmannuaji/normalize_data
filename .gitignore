@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.superpowers/

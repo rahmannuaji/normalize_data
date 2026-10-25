@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-10-25T11:28:48.800Z",
+        "reason": "Claude: typeface buatan desainer Indonesia (Tokotype), dipilih untuk audiens mahasiswa Indonesia di mockup sekali pakai"
+      }
+    ]
+  }
+}
