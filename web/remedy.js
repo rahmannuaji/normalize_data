@@ -1,7 +1,7 @@
 // Langkah 6–7: solusi berurutan (dengan label kejujuran) dan laporan siap tempel.
-import { call } from "./engine.js";
-import { histogram } from "./charts.js";
-import { fmt, fmtP, trim, pill, STATUS } from "./results.js";
+import { call } from "./engine.js?v=1";
+import { histogram } from "./charts.js?v=1";
+import { fmt, fmtP, trim, pill, STATUS } from "./results.js?v=1";
 
 let state, go, showError, h, icon;
 

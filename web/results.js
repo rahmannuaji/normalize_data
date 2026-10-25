@@ -1,6 +1,6 @@
 // Langkah 3–5: pilih tujuan analisis, hasil uji normalitas (dengan grafik), dan penyebab ketidaknormalan.
-import { call } from "./engine.js";
-import { histogram, qq, pp, boxplot, Z_FLAG } from "./charts.js";
+import { call } from "./engine.js?v=1";
+import { histogram, qq, pp, boxplot, Z_FLAG } from "./charts.js?v=1";
 
 let state, go, showError, h, icon;
 

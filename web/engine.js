@@ -1,6 +1,8 @@
 // Mesin statistik: Pyodide + paket cekdata. Satu-satunya jembatan JS ↔ Python.
 // Data pengguna hanya ditulis ke filesystem virtual Pyodide di memori browser, tidak dikirim ke mana pun.
 
+// Naikkan VERSION setiap rilis (juga ?v= pada import dan index.html) agar browser tidak memakai cache lama.
+const VERSION = "1";
 const PY_FILES = ["__init__.py", "io.py", "prep.py", "target.py", "normality.py", "diagnose.py", "remedies.py", "report.py", "api.py"];
 const API_NAMES = ["load_table", "set_cell", "prepare", "check", "remedy", "report", "export_scores"];
 const PKG_DIR = "/home/pyodide/cekdata";
@@ -17,7 +19,7 @@ const loading = (async () => {
     await pyodide.pyimport("micropip").install(["openpyxl==3.1.5", "xlrd==2.0.1"]);
     pyodide.FS.mkdirTree(PKG_DIR);
     await Promise.all(PY_FILES.map(async (f) => {
-      const res = await fetch(`py/cekdata/${f}`);
+      const res = await fetch(`py/cekdata/${f}?v=${VERSION}`);
       if (!res.ok) throw new Error(`py/cekdata/${f}: HTTP ${res.status}`);
       pyodide.FS.writeFile(`${PKG_DIR}/${f}`, await res.text());
     }));
