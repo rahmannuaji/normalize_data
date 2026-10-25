@@ -14,7 +14,7 @@ const loading = (async () => {
     pyodide = await loadPyodide();
     await pyodide.loadPackage(["numpy", "pandas", "scipy", "statsmodels", "micropip"]);
     // openpyxl tidak ada di distribusi Pyodide 0.27.7, jadi dipasang dari PyPI bersama xlrd (murni Python).
-    await pyodide.pyimport("micropip").install(["openpyxl", "xlrd"]);
+    await pyodide.pyimport("micropip").install(["openpyxl==3.1.5", "xlrd==2.0.1"]);
     pyodide.FS.mkdirTree(PKG_DIR);
     await Promise.all(PY_FILES.map(async (f) => {
       const res = await fetch(`py/cekdata/${f}`);

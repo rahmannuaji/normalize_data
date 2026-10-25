@@ -92,8 +92,8 @@ header.site { background: var(--surface); border-bottom: 1px solid var(--line); 
 .step:disabled { cursor: not-allowed; opacity: .55; }
 
 /* Bar pemuatan mesin statistik */
-.loadbar { position: relative; overflow: hidden; background: var(--brand-soft); color: var(--info); font-size: 13px; font-weight: 500; }
-.loadbar p { margin: 0 auto; padding-block: var(--space-sm); display: flex; align-items: center; gap: var(--space-sm); }
+.loadbar { position: relative; overflow: hidden; padding: var(--space-sm) 0; background: var(--brand-soft); color: var(--info); font-size: 13px; font-weight: 500; }
+.loadbar p { margin: 0 auto; display: flex; align-items: center; gap: var(--space-sm); }
 .loadbar::after {
   content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 30%;
   background: var(--brand); animation: loading 1.6s var(--ease-out) infinite;
@@ -145,7 +145,7 @@ h3 { font-size: 16px; font-weight: 700; line-height: 1.35; margin: 0 0 var(--spa
 
 /* ---------- Komponen langkah (dipakai Task 10–12) ---------- */
 .tabs { display: flex; gap: 6px; background: var(--line); padding: var(--space-xs); border-radius: 12px; width: max-content; max-width: 100%; overflow-x: auto; margin-bottom: var(--space-md); }
-.tabs button { display: inline-flex; align-items: center; gap: var(--space-sm); min-height: 40px; border: 0; background: none; padding: var(--space-sm) 14px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tabs button { display: inline-flex; align-items: center; gap: var(--space-sm); min-height: 44px; border: 0; background: none; padding: var(--space-sm) 14px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
 .tabs button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
 .drop { border: 2px dashed color-mix(in srgb, var(--brand) 25%, var(--line)); border-radius: var(--radius-card); padding: 36px var(--space-md); text-align: center; background: var(--surface-sunken); cursor: pointer; transition: border-color .15s; }
 .drop:hover, .drop.over { border-color: var(--brand); }
@@ -163,7 +163,8 @@ td.flag { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
 .note.info { background: var(--brand-soft); color: var(--info); }
 .note.bad { background: var(--bad-soft); color: var(--bad); }
 .note.ok { background: var(--ok-soft); color: var(--ok); }
-.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); font-size: 13px; margin: 3px; background: var(--surface); cursor: pointer; user-select: none; }
+.chip { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 5px 12px; border-radius: var(--radius-pill); border: 1px solid var(--line); font-size: 13px; margin: var(--space-xs); background: var(--surface); cursor: pointer; user-select: none; }
+.chip::after { content: ""; position: absolute; inset: -4px; } /* area sentuh 44px tanpa tumpang tindih antarchip */
 .chip.rev { border-color: var(--warn); background: var(--warn-soft); }
 .chip.sus { border-color: var(--bad); background: var(--bad-soft); }
 .opt { border: 1.5px solid var(--line); border-radius: var(--radius-card); padding: var(--space-md); cursor: pointer; background: var(--surface); transition: border-color .15s, background-color .15s; }
@@ -183,8 +184,9 @@ td.flag { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
 .pill.ok { background: var(--ok-soft); color: var(--ok); }
 .pill.bad { background: var(--bad-soft); color: var(--bad); }
 .pill.warn { background: var(--warn-soft); color: var(--warn); }
-.q { display: inline-flex; vertical-align: middle; color: var(--muted); cursor: help; margin-left: var(--space-xs); }
+.q { position: relative; display: inline-flex; vertical-align: middle; color: var(--muted); cursor: help; margin-left: var(--space-xs); }
 .q .ic { width: 17px; height: 17px; }
+.q::after { content: ""; position: absolute; inset: -14px; } /* area sentuh 45px */
 details { border: 1px solid var(--line); border-radius: var(--radius-btn); background: var(--surface); margin-top: 12px; }
 summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); min-height: 44px; padding: 12px 14px; cursor: pointer; font-weight: 600; list-style: none; }
 summary::-webkit-details-marker { display: none; }
@@ -205,7 +207,6 @@ details > div { padding: 0 14px 14px; }
 
 /* ---------- Beranda ---------- */
 .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; align-items: center; }
-.hero .lead { font-size: 17px; }
 .hero .micro { color: var(--muted); font-size: 13px; margin: 14px 0 0; }
 .hero-chart { margin: 0; padding: var(--space-md) var(--space-md) 12px; }
 .hero-chart svg { display: block; width: 100%; height: auto; }
@@ -214,7 +215,7 @@ details > div { padding: 0 14px 14px; }
 .chart .bar { fill: var(--brand); fill-opacity: .55; }
 .chart .bar.tail { fill: var(--bad); fill-opacity: .85; }
 .chart .curve { fill: none; stroke: var(--ink); stroke-width: 2; }
-.chart .tick { font: 500 11px var(--font-body); fill: var(--muted); text-anchor: middle; }
+.chart .tick { font: 500 12px var(--font-body); fill: var(--muted); text-anchor: middle; }
 .feats { margin-top: var(--space-2xl); }
 .feat { display: flex; gap: 12px; align-items: flex-start; }
 .feat > .ic { width: 22px; height: 22px; color: var(--brand); margin-top: 1px; }
