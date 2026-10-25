@@ -1,6 +1,6 @@
 // Langkah 3–5: pilih tujuan analisis, hasil uji normalitas (dengan grafik), dan penyebab ketidaknormalan.
-import { call } from "./engine.js?v=1";
-import { histogram, qq, pp, boxplot, Z_FLAG } from "./charts.js?v=1";
+import { call } from "./engine.js?v=2";
+import { histogram, qq, pp, boxplot, Z_FLAG } from "./charts.js?v=2";
 
 let state, go, showError, h, icon;
 
@@ -169,8 +169,8 @@ function resultPanel(c) {
   const out = h("div", {});
   c.notes.forEach((n) => out.append(h("div", { class: "note info" }, icon("info"), h("span", {}, n))));
   const statusCard = h("div", { class: `status ${v.status}` },
-    h("div", { class: "lbl" }, icon(ic), c.label),
-    h("div", { class: "big" }, text),
+    h("div", { class: "big" }, icon(ic), text),
+    h("div", { class: "small target-line" }, c.label),
     h("div", { class: "small" }, v.reason || `n = ${c.n}`),
     v.status === "bad" || v.status === "warn" ? h("button", { type: "button", class: "btn small primary", "data-go": "5", style: "margin-top:var(--space-sm)" }, "Lihat penyebabnya", icon("arrow-right")) : null);
   if (v.status === "skipped") {
@@ -192,10 +192,10 @@ function resultPanel(c) {
   const chart = (cls, title, help, ...extra) => h("div", { class: "card" }, ...titleWithHelp(title, help), h("div", { class: `chart-box ${cls}`, role: "img", "aria-label": title }), ...extra);
   out.append(
     h("div", { class: "grid g2" }, statusCard, whyCard),
-    h("div", { class: "grid g2 gap-top" },
+    h("div", { class: "grid g2 start gap-top" },
       chart("c-hist", "Histogram + kurva normal", HELP.hist),
       chart("c-qq", "Q-Q plot", HELP.qq, h("div", { class: "qq-info caption", "aria-live": "polite" }, "Klik titik merah di grafik, atau tombol di bawah, untuk melihat respondennya."), chips)),
-    h("div", { class: "grid g2 gap-top" },
+    h("div", { class: "grid g2 start gap-top" },
       chart("c-pp", "P-P plot", HELP.pp),
       chart("c-box", "Boxplot", HELP.box)),
     h("details", { open: true }, h("summary", {}, `Semua uji (${c.tests.length})`, icon("chevron-down")), h("div", {}, testTable(c))),
@@ -224,22 +224,31 @@ function testRow(t, c) {
     result = t.rejected ? pill("bad", "circle-x", "Tidak normal") : pill("ok", "circle-check", "Normal");
     means = `p ${t.p < 0.001 ? "< 0,001" : "= " + fmt(t.p, 3)} ${t.rejected ? "<" : "≥"} ${fmt(alpha)} → ${t.rejected ? "berbeda nyata dari" : "tidak berbeda nyata dari"} distribusi normal.`;
   }
-  return h("tr", {}, h("td", {}, h("b", {}, t.name), h("div", { class: "caption" }, TEST_INFO[t.id])), h("td", {}, stat), h("td", {}, pTxt), h("td", {}, result),
+  return h("tr", {}, h("td", { class: "name" }, h("b", {}, t.name), h("div", { class: "caption" }, TEST_INFO[t.id])), h("td", { "data-l": "Statistik" }, stat), h("td", { "data-l": "p" }, pTxt), h("td", { class: "res" }, result),
     h("td", { class: "means" }, means, t.id === "ks_classic" ? h("div", { class: "warn-line" }, icon("triangle-alert"), "Terlalu longgar, sebaiknya tidak dipakai.") : null));
 }
 
 function testTable(c) {
   return h("div", { class: "tablewrap", tabindex: "0", role: "region", "aria-label": "Tabel semua uji normalitas" },
-    h("table", {}, h("thead", {}, h("tr", {}, ["Uji", "Statistik", "p", "Hasil", "Artinya"].map((t) => h("th", {}, t)))), h("tbody", {}, c.tests.map((t) => testRow(t, c)))));
+    h("table", { class: "tests" }, h("thead", {}, h("tr", {}, ["Uji", "Statistik", "p", "Hasil", "Artinya"].map((t) => h("th", {}, t)))), h("tbody", {}, c.tests.map((t) => testRow(t, c)))));
 }
 
 // ---------- Langkah 5 ----------
-const SEV = { high: ["circle-x", "high", "Pengaruh besar"], medium: ["triangle-alert", "medium", "Pengaruh sedang"], low: ["info", "low", "Pengaruh kecil"] };
+const SEV = { high: ["circle-x", "bad", "Pengaruh besar"], medium: ["triangle-alert", "warn", "Pengaruh sedang"], low: ["info", "info", "Pengaruh kecil"] };
 
-function rowsTable(tb) {
-  const body = tb.rows.slice(0, MAX_ROWS).map((r) => h("tr", { class: "flag" }, r.map((x, i) => h("td", {}, i === 0 ? String(x) : trim(x)))));
+// Hanya sel yang melewati batas yang diwarnai; keterangan batasnya ada di bawah tabel.
+function rowsTable(tb, f, n) {
+  const ir = tb.columns.indexOf("Residual terstandar");
+  const ic = tb.columns.indexOf("Cook's D");
+  const cookMax = 4 / n;
+  const over = (i, x) => x != null && ((i === 0 && f.id === "data_error") || (i === ir ? Math.abs(x) > 3 : i === ic && x > cookMax));
+  const body = tb.rows.slice(0, MAX_ROWS).map((r) => h("tr", {}, r.map((x, i) => (over(i, x)
+    ? h("td", { class: "flag" }, icon("circle-x"), i === 0 ? String(x) : trim(x))
+    : h("td", {}, i === 0 ? String(x) : trim(x))))));
   const more = tb.rows.length > MAX_ROWS ? h("p", { class: "caption" }, `dan ${tb.rows.length - MAX_ROWS} baris lainnya`) : null;
-  return h("div", {}, h("div", { class: "tablewrap" }, h("table", {}, h("thead", {}, h("tr", {}, tb.columns.map((c) => h("th", {}, c)))), h("tbody", {}, body))), more);
+  const caps = [{ outliers: "Baris ini ditandai karena jauh dari kebanyakan data (di luar 1,5 × IQR atau |z| > 3).", data_error: "Nomor baris merah memuat nilai di luar skala jawaban.", ceiling: "Baris dengan skor di 10% teratas rentang skala.", floor: "Baris dengan skor di 10% terbawah rentang skala." }[f.id],
+    ir >= 0 ? `Sel merah melewati batas: |residual terstandar| > 3 atau Cook's D > ${fmt(cookMax, 3)} (4/n, n = ${n}).` : null];
+  return h("div", {}, h("div", { class: "tablewrap" }, h("table", {}, h("thead", {}, h("tr", {}, tb.columns.map((c) => h("th", {}, c)))), h("tbody", {}, body))), h("p", { class: "caption" }, caps.filter(Boolean).join(" ")), more);
 }
 
 function renderCauses() {
@@ -257,9 +266,9 @@ function renderCauses() {
     }
     out.push(h("div", { class: "card flush" }, c.findings.map((f) => {
       const [sic, cls, sev] = SEV[f.severity];
-      return h("div", { class: "finding" }, h("div", { class: `n ${cls}` }, icon(sic)),
-        h("div", { class: "grow" }, h("span", { class: `sev ${cls}` }, sev), h("h3", {}, f.title), h("p", { class: "small muted" }, f.detail),
-          f.table ? rowsTable(f.table) : null,
+      return h("div", { class: "finding" },
+        h("div", { class: "grow" }, h("div", { class: "fhead" }, h("h3", {}, f.title), pill(cls, sic, sev)), h("p", { class: "small muted" }, f.detail),
+          f.table ? rowsTable(f.table, f, c.n) : null,
           f.id === "data_error" || f.id === "unreversed_item" ? h("button", { type: "button", class: "btn small", "data-go": "2", style: "margin-top:var(--space-sm)" }, "Periksa di langkah 2") : null));
     })));
   }

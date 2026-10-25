@@ -25,7 +25,7 @@ def test_reversing_fixes_flag_and_score():
 def test_out_of_range_detected_with_inferred_scale():
     df = items_df(); df.loc[10, "P2"] = 55
     _, info = build_scores(df, [spec()])
-    assert {"kind": "out_of_range", "row": 11, "column": "P2", "value": 55.0} in info["warnings"]
+    assert {"kind": "out_of_range", "row": 11, "column": "P2", "value": 55.0, "scale": [1, 5]} in info["warnings"]
 
 def test_non_numeric_rows_dropped_and_counted():
     df = items_df().astype(object); df.loc[3, "P1"] = "-"; df.loc[7, "P1"] = "lima"

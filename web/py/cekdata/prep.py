@@ -36,7 +36,7 @@ def build_scores(df, variables, group=None):
             lo, hi = scale
             for c in cs:
                 for i in items.index[(items[c] < lo) | (items[c] > hi)]:
-                    warnings.append({"kind": "out_of_range", "row": int(i) + 1, "column": c, "value": float(items.at[i, c])})
+                    warnings.append({"kind": "out_of_range", "row": int(i) + 1, "column": c, "value": float(items.at[i, c]), "scale": [_num(lo), _num(hi)]})
             items = items.copy()
             for c in v["reversed"]:
                 items[c] = lo + hi - items[c]

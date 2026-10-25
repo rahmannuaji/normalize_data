@@ -1,7 +1,7 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
-import { ready, call, writeFile } from "./engine.js?v=1";
-import { initResults } from "./results.js?v=1";
-import { initRemedy } from "./remedy.js?v=1";
+import { ready, call, writeFile } from "./engine.js?v=2";
+import { initResults } from "./results.js?v=2";
+import { initRemedy } from "./remedy.js?v=2";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 
@@ -21,6 +21,15 @@ for (const p of pages.slice(1)) {
   b.append(p.dataset.title);
   stepsEl.append(b);
 }
+
+// Pudar di tepi stepper yang masih bisa digulir (hanya terlihat di layar sempit).
+function fadeSteps() {
+  const max = stepsEl.scrollWidth - stepsEl.clientWidth;
+  stepsEl.style.setProperty("--fl", stepsEl.scrollLeft > 4 ? "28px" : "0px");
+  stepsEl.style.setProperty("--fr", max - stepsEl.scrollLeft > 4 ? "28px" : "0px");
+}
+stepsEl.addEventListener("scroll", fadeSteps, { passive: true });
+addEventListener("resize", fadeSteps);
 
 // Semua elemen [data-go] (stepper, tombol Kembali/Lanjut, logo) berpindah langkah lewat go().
 document.addEventListener("click", (e) => {
@@ -44,10 +53,12 @@ export function go(step) {
   }
   refreshNav();
   stepsEl.hidden = step === 0;
+  stepsEl.querySelector(".on")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "auto" }); // instan: gulir halus akan dibatalkan scrollTo halaman di bawah, dan memang tidak perlu animasi
   if (!first) {
     scrollTo({ top: 0, behavior: reduceMotion.matches ? "auto" : "smooth" });
     pages[step].querySelector("h1, h2")?.focus({ preventScroll: true });
   }
+  fadeSteps();
   document.dispatchEvent(new CustomEvent("step", { detail: step })); // langkah 3–5 menggambar isinya (results.js)
 }
 
@@ -447,9 +458,11 @@ function renderPrep(p) {
     h("b", {}, w.item), ` berkorelasi negatif dengan total ${w.variable} (r = ${num(w.r)}). Kemungkinan item unfavorable yang belum dibalik. `,
     h("button", { type: "button", class: "btn small", onclick: () => reverseItem(w) }, `Balik skor ${w.item}`))));
   out.push(...capped(oor, (w) => {
-    const inp = h("input", { class: "inp fix", inputmode: "decimal", "aria-label": `Nilai pengganti baris ${w.row} kolom ${w.column}` });
-    return note("warn", "triangle-alert", `Baris ${w.row} berisi nilai ${cell(w.value)} di `, h("b", {}, w.column), " (di luar skala). Mungkin salah ketik. ",
-      h("span", { class: "fixrow" }, inp, h("button", { type: "button", class: "btn small", onclick: () => fixCell(w, inp) }, "Perbaiki")));
+    const [lo, hi] = w.scale.map(num);
+    const id = `fix${w.row}_${w.column}`.replace(/\W/g, "_");
+    const inp = h("input", { class: "inp fix", id, inputmode: "decimal", placeholder: `${lo}–${hi}` });
+    return note("warn", "triangle-alert", `Baris ${w.row} berisi nilai ${cell(w.value)} di `, h("b", {}, w.column), ` (di luar skala ${lo}–${hi}). Mungkin salah ketik.`,
+      h("span", { class: "fixrow" }, h("label", { for: id }, `Nilai yang benar (${lo}–${hi})`), inp, h("button", { type: "button", class: "btn small", onclick: () => fixCell(w, inp) }, "Perbaiki")));
   }));
   out.push(...capped(nn, (w) => note("warn", "triangle-alert", `Kolom `, h("b", {}, w.column), ` punya ${w.count} sel yang bukan angka. Barisnya tidak diikutkan.`)));
   if (p.n_dropped > 0) {
