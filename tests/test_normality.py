@@ -47,3 +47,9 @@ def test_check_target_exponential_bad_with_plot_data():
     r = check_target({"label": "Y1", "values": x, "rows": list(range(1, 41)), "groups_n": None}, "normality_only")
     assert r["verdict"]["status"] == "bad"
     assert len(r["plot"]["qq"]["sample"]) == 40 and sorted(r["plot"]["qq"]["rows"]) == list(range(1, 41))
+
+@pytest.mark.filterwarnings("ignore:scipy.stats.shapiro")
+def test_note_for_n_above_5000():
+    x = norm.ppf((np.arange(1, 5002) - 0.5) / 5001)
+    r = check_target({"label": "Y1", "values": x, "rows": list(range(1, 5002)), "groups_n": None}, "normality_only")
+    assert "p-value Shapiro-Wilk kurang akurat untuk n > 5000" in r["notes"]

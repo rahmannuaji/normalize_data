@@ -93,7 +93,7 @@ def decide_status(n, sw_p, skew, kurt, z_skew, z_kurt, goal, groups_n, alpha):
 def _reason(rule, sw_p, m):
     p = _fmt_p(sw_p)
     if rule == "n<50":
-        return f"Untuk n kurang dari 50 dipakai Shapiro-Wilk (p {p}; Mishra dkk., 2019)."
+        return f"Untuk n kurang dari 50 dipakai Shapiro-Wilk (p {p}; Ghasemi & Zahediasl, 2012)."
     if rule == "50-300":
         return (f"Untuk n antara 50 dan 300 dipakai Shapiro-Wilk (p {p}) ditambah "
                 f"z-skewness/kurtosis (batas 3,29; Kim, 2013).")
@@ -136,8 +136,7 @@ def check_target(target, goal, alpha=0.05):
                          "sample": z.tolist(), "rows": [rows[j] for j in order]}
     res["plot"]["pp"] = {"expected": ((i - 0.5) / n).tolist(), "observed": stats.norm.cdf(z).tolist()}
     if n > 5000:
-        res["notes"].append("Data lebih dari 5.000 baris: p-value Shapiro-Wilk kurang akurat, "
-                            "andalkan plot dan nilai skewness/kurtosis.")
+        res["notes"].append("p-value Shapiro-Wilk kurang akurat untuk n > 5000")
     if n < 20:
         res["notes"].append("Uji D'Agostino-Pearson kurang akurat untuk n < 20.")
     return res
