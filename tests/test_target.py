@@ -37,7 +37,7 @@ def test_anova_residual_and_paired_and_variable():
     assert t["label"] == "Residual ANOVA: Y1 ~ kelompok" and t["groups_n"] == [20, 20, 20] and t["kind"] == "residual"
     v2 = [{"name": "Y1", "role": "Y"}, {"name": "X1", "role": "Y"}]
     [d] = build_targets(s, v2, "ttest_paired")
-    assert d["label"] == "Selisih Y2 − Y1" and np.allclose(d["values"], s["X1"] - s["Y1"])
+    assert d["label"] == "Selisih X1 − Y1" and np.allclose(d["values"], s["X1"] - s["Y1"])
     assert [t["label"] for t in build_targets(s, V, "normality_only")] == ["Y1", "X1", "X2"]
     with pytest.raises(GoalError, match="kolom kelompok"):
         build_targets(s.drop(columns="__group"), V, "anova")
