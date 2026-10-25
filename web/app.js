@@ -253,9 +253,14 @@ manualTable.addEventListener("paste", (e) => {
 const useManual = h("button", { type: "button", class: "btn primary", onclick: () => submitManual() }, "Pakai data ini");
 async function submitManual() {
   const cols = manualHeaders();
-  const rows = manual.data.filter((r) => r.some((v) => String(v).trim() !== ""));
+  // Baris kosong di tengah tetap dikirim agar nomor baris dari mesin = nomor baris di tabel; hanya baris kosong di ujung dibuang.
+  const rows = manual.data.slice();
+  while (rows.length && rows[rows.length - 1].every((v) => String(v).trim() === "")) rows.pop();
   if (!rows.length) return showError("Isi minimal satu sel dulu.");
-  const clean = (v) => String(v ?? "").replace(/[;\n\r\t]/g, " ").trim();
+  const clean = (v) => {
+    const s = String(v ?? "").replace(/[;\n\r\t]/g, " ").trim();
+    return s === "" && cols.length === 1 ? '""' : s; // satu kolom: baris kosong polos dilewati pembaca CSV
+  };
   const csv = [cols, ...rows].map((r) => r.map(clean).join(";")).join("\n");
   try {
     const path = await busy(() => writeFile("manual.csv", new TextEncoder().encode(csv)));

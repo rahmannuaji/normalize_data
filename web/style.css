@@ -224,9 +224,11 @@ button.opt { text-align: left; width: 100%; font: inherit; color: inherit; }
 .fixrow { display: inline-flex; align-items: center; gap: var(--space-sm); margin-top: var(--space-xs); }
 .chip.grp { padding: 0; gap: 0; }
 .chip.grp::after { display: none; }
-.chip.grp button { position: relative; border: 0; background: none; cursor: pointer; min-height: 34px; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 13px; }
-.chip.grp button::after { content: ""; position: absolute; inset: -4px 0; } /* area sentuh 44px */
-.chip.grp button + button { padding: 5px 10px 5px 4px; }
+.chip.grp button { position: relative; border: 0; background: none; cursor: pointer; min-height: 36px; min-width: 40px; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 13px; }
+.chip.grp button::after { content: ""; position: absolute; inset: -4px; } /* area sentuh >= 44px; jarak antarchip 8px, jadi tidak tumpang tindih */
+.chip.grp button:first-child:not(:last-child)::after { inset: -4px 0 -4px -4px; }
+.chip.grp button + button { padding: 5px 14px 5px 12px; }
+.chip.grp button + button::after { inset: -4px -4px -4px 0; }
 .chip.grp .ic { width: 15px; height: 15px; vertical-align: -3px; }
 .chip.sel { border-color: var(--brand); background: var(--brand-soft); }
 .chip.sel.rev { border-color: var(--warn); background: var(--warn-soft); }
