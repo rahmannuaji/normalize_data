@@ -271,3 +271,34 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- Langkah 3–5: tujuan, hasil, penyebab ---------- */
+button.opt:disabled { cursor: not-allowed; background: var(--surface-sunken); color: var(--muted); }
+button.opt:disabled:hover { border-color: var(--line); }
+button.opt:disabled > .ic { color: var(--muted); }
+.opt .why { display: flex; gap: var(--space-xs); align-items: flex-start; color: var(--warn); font-weight: 600; }
+.opt .why .ic { margin-top: 1px; }
+.field.alpha { margin-top: var(--space-md); }
+.field.alpha .tabs { margin-bottom: 0; }
+.gap-top { margin-top: var(--space-md); }
+button.q { border: 0; background: none; padding: 0; }
+.help { margin: 0 0 var(--space-sm); }
+.chart-box { width: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-sm); }
+.chips .chip { margin: var(--space-xs); font-family: inherit; color: var(--bad); font-weight: 600; }
+.qq-info { display: flex; gap: var(--space-sm); align-items: flex-start; min-height: 24px; }
+.qq-info.hit { background: var(--bad-soft); color: var(--bad); border-radius: var(--radius-btn); padding: 10px 12px; font-size: 14px; }
+.means .caption { margin-top: 2px; }
+td.means { white-space: normal; min-width: 220px; }
+td .caption { white-space: normal; min-width: 180px; }
+.warn-line { display: flex; gap: var(--space-xs); align-items: flex-start; color: var(--warn); font-weight: 600; margin-top: var(--space-xs); }
+.muted { color: var(--muted); }
+.card.flush { padding: 0; }
+.finding .grow { flex: 1; min-width: 0; }
+.finding .n.high { background: var(--bad-soft); color: var(--bad); }
+.finding .n.medium { background: var(--warn-soft); color: var(--warn); }
+.finding .n.low { background: var(--brand-soft); color: var(--info); }
+.finding h3 { margin-bottom: var(--space-xs); }
+.finding .tablewrap { margin-top: var(--space-sm); }
+h3.target { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin: var(--space-lg) 0 var(--space-sm); }
+.status .btn { display: inline-flex; }

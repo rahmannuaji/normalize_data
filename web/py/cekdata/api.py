@@ -90,8 +90,26 @@ def _checks(scores, transformed):
         rng = None if transformed else ranges.get(y)
         yv = scores.loc[[r - 1 for r in t["rows"]], t["y"]].to_numpy() if t["kind"] == "residual" else t["values"]
         c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, warns) if c["moments"] else []
+        for f in c["findings"]:
+            f["table"] = _row_table(t, scores, f["rows"]) if f["rows"] else None
         out.append(c)
     return out
+
+
+def _row_table(t, scores, rows):
+    """Tabel baris terkait temuan: regresi -> Y, X, residual terstandar, Cook's D; lainnya -> nilai yang diuji."""
+    pos = {r: i for i, r in enumerate(t["rows"])}
+    mod, y = t.get("model"), t["y"]
+    xs = [v["name"] for v in _S["variables"] if v["role"] == "X"]
+    rd = lambda v: None if pd.isna(v) else round(float(v), 3)
+    if mod:
+        cols = ["Baris", y, *xs, "Residual terstandar", "Cook's D"]
+        body = [[r, *(rd(scores.loc[r - 1][c]) for c in (y, *xs)), rd(mod["std_resid"][pos[r]]), rd(mod["cooks"][pos[r]])] for r in rows]
+    elif t["kind"] == "residual":
+        cols, body = ["Baris", y, "Residual"], [[r, rd(scores.loc[r - 1][y]), rd(t["values"][pos[r]])] for r in rows]
+    else:
+        cols, body = ["Baris", "Nilai"], [[r, rd(t["values"][pos[r]])] for r in rows]
+    return {"columns": cols, "rows": body}
 
 
 def _cell(v):
@@ -143,7 +161,8 @@ def prepare(variables, group=None):
         _S.pop(k, None)
     _S.update(variables=variables, group=group, scores=scores, info=info, excluded={}, transform=None, alternatives=[])
     prev = scores.head(10)
-    return {**info, "preview": [{"row": int(i) + 1, **r} for i, r in zip(prev.index, prev.to_dict("records"))]}
+    groups = scores["__group"].astype(str).value_counts().sort_index().to_dict() if "__group" in scores else None
+    return {**info, "groups": groups, "preview": [{"row": int(i) + 1, **r} for i, r in zip(prev.index, prev.to_dict("records"))]}
 
 
 @_endpoint

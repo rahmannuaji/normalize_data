@@ -116,3 +116,16 @@ def test_excluded_row_warning_not_in_findings_after():
     _setup()
     r = call("remedy", kind="exclude", reasons={"87": "salah_input"})
     assert all(f["id"] != "data_error" for f in r["after"][0]["findings"])
+
+
+def test_finding_rows_come_with_regression_table():
+    f = next(f for f in _setup()["targets"][0]["findings"] if f["id"] == "outliers")
+    assert f["table"]["columns"] == ["Baris", "Y1", "X1", "Residual terstandar", "Cook's D"]
+    assert [r[0] for r in f["table"]["rows"]] == f["rows"]
+
+
+def test_prepare_reports_group_sizes():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    g = call("prepare", variables=[Y, X], group="JK")["groups"]
+    assert set(g) == {"L", "P"} and sum(g.values()) == 147
+    assert call("prepare", variables=[Y, X], group=None)["groups"] is None

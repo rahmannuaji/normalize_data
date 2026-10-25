@@ -1,5 +1,6 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
 import { ready, call, writeFile } from "./engine.js";
+import { initResults } from "./results.js";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 
@@ -46,6 +47,7 @@ export function go(step) {
     scrollTo({ top: 0, behavior: reduceMotion.matches ? "auto" : "smooth" });
     pages[step].querySelector("h1, h2")?.focus({ preventScroll: true });
   }
+  document.dispatchEvent(new CustomEvent("step", { detail: step })); // langkah 3–5 menggambar isinya (results.js)
 }
 
 // Perbarui stepper (aktif/selesai/nonaktif) tanpa berpindah halaman; dipanggil setelah state.table berubah.
@@ -317,8 +319,8 @@ function newVar(role) {
   return { name: nextName(role), role, columns: [], combine: "sum", reversed: [], scale: null, ui: { mode: "items", smin: "", smax: "" } };
 }
 function resetVariables() {
-  state.variables = [newVar("Y")];
-  state.variables.push(newVar("X"));
+  state.variables = [];
+  state.variables.push(newVar("Y"), newVar("X"));
   state.group = null;
   state.prep = null;
 }
@@ -417,6 +419,7 @@ async function runPrepare() {
     const res = await call("prepare", { variables: vars, group: state.group });
     if (mine !== seq) return;
     state.prep = res;
+    state.check = null; // variabel berubah, hasil uji lama tidak berlaku lagi
     renderPrep(res);
   } catch (err) {
     if (mine === seq) showError(err.message);
@@ -465,4 +468,5 @@ function reverseItem(w) {
   runPrepare();
 }
 
+initResults({ state, go, showError, h, icon });
 go(0);
