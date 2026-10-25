@@ -289,6 +289,7 @@ button.q { border: 0; background: none; padding: 0; }
 .chart-box { width: 100%; }
 .chips { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-sm); }
 .chips .chip { margin: var(--space-xs); font-family: inherit; color: var(--bad); font-weight: 600; }
+.qq-strip { margin-top: var(--space-md); }
 .qq-info { display: flex; gap: var(--space-sm); align-items: flex-start; min-height: 24px; }
 .qq-info.hit { background: var(--bad-soft); color: var(--bad); border-radius: var(--radius-btn); padding: 10px 12px; font-size: 14px; }
 .means .caption { margin-top: 2px; }
@@ -346,15 +347,18 @@ table.apa th, table.apa td { white-space: normal; }
 @media (max-width: 480px) {
   table.apa, table.apa th, table.apa td { font-size: 14px; }
   table.apa th, table.apa td { padding: var(--space-sm) var(--space-xs); }
+  table.apa th:not(:first-child), table.apa td:not(:first-child) { white-space: nowrap; }
   table.apa th:first-child, table.apa td:first-child { padding-left: 0; }
   .tablewrap:has(table.tests) { border: 0; border-radius: 0; overflow: visible; }
   table.tests, table.tests tbody { display: block; background: none; }
   table.tests thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  table.tests tr { display: grid; grid-template-columns: auto auto 1fr; gap: var(--space-xs) var(--space-md); align-items: center; padding: var(--space-md) 0; border-bottom: 1px solid var(--line); }
+  table.tests tr { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); align-items: center; padding: var(--space-md) 0; border-bottom: 1px solid var(--line); }
   table.tests td { padding: 0; border: 0; white-space: normal; min-width: 0; }
-  table.tests td.name { grid-column: 1 / -1; }
-  table.tests td.res { grid-row: 2; grid-column: 1; }
+  table.tests td.name, table.tests td.means { flex: 1 0 100%; }
+  table.tests td.res { order: 1; }
+  table.tests td[data-l] { order: 2; white-space: nowrap; }
+  table.tests td.means { order: 3; }
   table.tests td[data-l]::before { content: attr(data-l) " "; color: var(--muted); font-size: 13px; }
-  table.tests td.means { grid-column: 1 / -1; min-width: 0; }
+  table.tests td.means { min-width: 0; }
   table.tests td .caption { min-width: 0; }
 }

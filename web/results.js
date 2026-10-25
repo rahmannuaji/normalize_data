@@ -1,6 +1,6 @@
 // Langkah 3–5: pilih tujuan analisis, hasil uji normalitas (dengan grafik), dan penyebab ketidaknormalan.
-import { call } from "./engine.js?v=2";
-import { histogram, qq, pp, boxplot, Z_FLAG } from "./charts.js?v=2";
+import { call } from "./engine.js?v=3";
+import { histogram, qq, pp, boxplot, Z_FLAG } from "./charts.js?v=3";
 
 let state, go, showError, h, icon;
 
@@ -192,10 +192,11 @@ function resultPanel(c) {
   const chart = (cls, title, help, ...extra) => h("div", { class: "card" }, ...titleWithHelp(title, help), h("div", { class: `chart-box ${cls}`, role: "img", "aria-label": title }), ...extra);
   out.append(
     h("div", { class: "grid g2" }, statusCard, whyCard),
-    h("div", { class: "grid g2 start gap-top" },
+    h("div", { class: "grid g2 gap-top" },
       chart("c-hist", "Histogram + kurva normal", HELP.hist),
-      chart("c-qq", "Q-Q plot", HELP.qq, h("div", { class: "qq-info caption", "aria-live": "polite" }, "Klik titik merah di grafik, atau tombol di bawah, untuk melihat respondennya."), chips)),
-    h("div", { class: "grid g2 start gap-top" },
+      chart("c-qq", "Q-Q plot", HELP.qq)),
+    h("div", { class: "qq-strip" }, h("div", { class: "qq-info caption", "aria-live": "polite" }, "Klik titik merah di grafik Q-Q, atau tombol di bawah, untuk melihat respondennya."), chips),
+    h("div", { class: "grid g2 gap-top" },
       chart("c-pp", "P-P plot", HELP.pp),
       chart("c-box", "Boxplot", HELP.box)),
     h("details", { open: true }, h("summary", {}, `Semua uji (${c.tests.length})`, icon("chevron-down")), h("div", {}, testTable(c))),

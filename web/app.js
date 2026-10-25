@@ -1,7 +1,7 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
-import { ready, call, writeFile } from "./engine.js?v=2";
-import { initResults } from "./results.js?v=2";
-import { initRemedy } from "./remedy.js?v=2";
+import { ready, call, writeFile } from "./engine.js?v=3";
+import { initResults } from "./results.js?v=3";
+import { initRemedy } from "./remedy.js?v=3";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 
@@ -23,13 +23,18 @@ for (const p of pages.slice(1)) {
 }
 
 // Pudar di tepi stepper yang masih bisa digulir (hanya terlihat di layar sempit).
+function syncSteps() {
+  stepsEl.querySelector(".on")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "auto" }); // instan: gulir halus dibatalkan scrollTo halaman
+  fadeSteps();
+}
 function fadeSteps() {
   const max = stepsEl.scrollWidth - stepsEl.clientWidth;
-  stepsEl.style.setProperty("--fl", stepsEl.scrollLeft > 4 ? "28px" : "0px");
-  stepsEl.style.setProperty("--fr", max - stepsEl.scrollLeft > 4 ? "28px" : "0px");
+  stepsEl.style.setProperty("--fl", stepsEl.scrollLeft > 4 ? "44px" : "0px");
+  stepsEl.style.setProperty("--fr", max - stepsEl.scrollLeft > 4 ? "44px" : "0px");
 }
 stepsEl.addEventListener("scroll", fadeSteps, { passive: true });
-addEventListener("resize", fadeSteps);
+new ResizeObserver(syncSteps).observe(stepsEl); // saat dibuka, diputar, atau jendela diubah ukurannya
+addEventListener("load", syncSteps);
 
 // Semua elemen [data-go] (stepper, tombol Kembali/Lanjut, logo) berpindah langkah lewat go().
 document.addEventListener("click", (e) => {
@@ -53,12 +58,11 @@ export function go(step) {
   }
   refreshNav();
   stepsEl.hidden = step === 0;
-  stepsEl.querySelector(".on")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "auto" }); // instan: gulir halus akan dibatalkan scrollTo halaman di bawah, dan memang tidak perlu animasi
+  syncSteps();
   if (!first) {
     scrollTo({ top: 0, behavior: reduceMotion.matches ? "auto" : "smooth" });
     pages[step].querySelector("h1, h2")?.focus({ preventScroll: true });
   }
-  fadeSteps();
   document.dispatchEvent(new CustomEvent("step", { detail: step })); // langkah 3–5 menggambar isinya (results.js)
 }
 

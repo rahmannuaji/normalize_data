@@ -88,5 +88,5 @@ export function boxplot(el, values) {
       marker: { color: t.bad, size: 7, outliercolor: t.bad },
       hovertemplate: "%{x}<extra></extra>",
     },
-  ], layout(t, "Nilai", "", { height: 200, yaxis: { visible: false } }), CONFIG);
+  ], layout(t, "Nilai", "", { yaxis: { visible: false } }), CONFIG);
 }
