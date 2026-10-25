@@ -19,6 +19,8 @@ def read_table(path, sheet=None):
     elif ext in (".xlsx", ".xls"):
         engine = "openpyxl" if ext == ".xlsx" else "xlrd"
         sheets = pd.ExcelFile(path, engine=engine).sheet_names
+        if sheet is not None and sheet not in sheets:
+            raise ValueError(f"Sheet \"{sheet}\" tidak ditemukan. Sheet yang tersedia: {', '.join(sheets)}.")
         df = pd.read_excel(path, sheet_name=sheet or sheets[0], engine=engine)
     else:
         raise ValueError("Format file belum didukung. Gunakan .csv, .xlsx, atau .xls.")

@@ -1,5 +1,6 @@
 from cekdata.io import read_table, table_summary
 import pandas as pd
+import pytest
 
 def test_csv_indonesia_semicolon_decimal_comma_bom(tmp_path):
     p = tmp_path / "data.csv"
@@ -22,3 +23,15 @@ def test_excel_multi_sheet(tmp_path):
 def test_summary_preview_none_for_nan():
     s = table_summary(pd.DataFrame({"A": [1.0, None]}))
     assert s == {"columns": ["A"], "n_rows": 2, "preview": [[1.0], [None]]}
+
+def test_unsupported_extension_raises(tmp_path):
+    p = tmp_path / "data.txt"
+    p.write_text("a")
+    with pytest.raises(ValueError, match="Format file belum didukung"):
+        read_table(str(p))
+
+def test_missing_sheet_raises_indonesian(tmp_path):
+    p = tmp_path / "data.xlsx"
+    pd.DataFrame({"A": [1]}).to_excel(p, sheet_name="Data", index=False)
+    with pytest.raises(ValueError, match="tidak ditemukan"):
+        read_table(str(p), sheet="Tidak")
