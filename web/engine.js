@@ -2,7 +2,7 @@
 // Data pengguna hanya ditulis ke filesystem virtual Pyodide di memori browser, tidak dikirim ke mana pun.
 
 // Naikkan VERSION setiap rilis (juga ?v= pada import dan index.html) agar browser tidak memakai cache lama.
-const VERSION = "3";
+const VERSION = "4";
 const PY_FILES = ["__init__.py", "io.py", "prep.py", "target.py", "normality.py", "diagnose.py", "remedies.py", "report.py", "api.py"];
 const API_NAMES = ["load_table", "set_cell", "prepare", "check", "remedy", "report", "export_scores"];
 const PKG_DIR = "/home/pyodide/cekdata";

@@ -1,7 +1,7 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
-import { ready, call, writeFile } from "./engine.js?v=3";
-import { initResults } from "./results.js?v=3";
-import { initRemedy } from "./remedy.js?v=3";
+import { ready, call, writeFile } from "./engine.js?v=4";
+import { initResults } from "./results.js?v=4";
+import { initRemedy } from "./remedy.js?v=4";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 
@@ -24,7 +24,9 @@ for (const p of pages.slice(1)) {
 
 // Pudar di tepi stepper yang masih bisa digulir (hanya terlihat di layar sempit).
 function syncSteps() {
-  stepsEl.querySelector(".on")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "auto" }); // instan: gulir halus dibatalkan scrollTo halaman
+  // Hanya menggulir stepper secara horizontal; scrollIntoView bisa ikut menggeser halaman.
+  const on = stepsEl.querySelector(".on");
+  if (on) stepsEl.scrollTo({ left: on.getBoundingClientRect().left - stepsEl.getBoundingClientRect().left + stepsEl.scrollLeft - (stepsEl.clientWidth - on.offsetWidth) / 2, behavior: "auto" });
   fadeSteps();
 }
 function fadeSteps() {
