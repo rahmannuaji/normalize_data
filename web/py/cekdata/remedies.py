@@ -6,10 +6,11 @@ REASONS = {"salah_input": "Salah input", "menjawab_asal": "Responden menjawab as
            "di_luar_populasi": "Di luar populasi penelitian"}
 
 
-def _res(id_, name, label, stat, p, ci=None, effect=None, **extra):
+def _res(id_, name, label, stat, p, ci=None, effect=None, effect_name=None, **extra):
     f = lambda v: None if v is None else float(v)
     return {"id": id_, "name": name, "label": label, "stat": f(stat), "p": f(p),
-            "ci": None if ci is None else [float(ci[0]), float(ci[1])], "effect": f(effect), **extra}
+            "ci": None if ci is None else [float(ci[0]), float(ci[1])], "effect": f(effect),
+            "effect_name": None if effect is None else effect_name, **extra}
 
 
 def bootstrap_ols(y, X, names, n_boot=5000, seed=2026):
@@ -17,10 +18,20 @@ def bootstrap_ols(y, X, names, n_boot=5000, seed=2026):
     A = np.column_stack([np.ones(len(y)), np.asarray(X, float)])
     n = len(y)
     rng = np.random.default_rng(seed)
-    coefs = np.empty((n_boot, A.shape[1]))
-    for b in range(n_boot):
-        i = rng.integers(0, n, n)
-        coefs[b] = np.linalg.lstsq(A[i], y[i], rcond=None)[0]
+    k = A.shape[1]
+    P = (A[:, :, None] * A[:, None, :]).reshape(n, k * k)
+    Q = A * y[:, None]
+    coefs = np.empty((n_boot, k))
+    for s in range(0, n_boot, 250):
+        c = min(250, n_boot - s)
+        idx = rng.integers(0, n, (c, n))  # same stream as c sequential draws of n
+        W = np.bincount((idx + np.arange(c)[:, None] * n).ravel(), minlength=c * n).reshape(c, n)
+        try:
+            coefs[s:s + c] = np.linalg.solve((W @ P).reshape(c, k, k), (W @ Q)[:, :, None])[:, :, 0]
+        except np.linalg.LinAlgError:  # resample with collinear columns: fall back to lstsq
+            for b in range(c):
+                i = idx[b]
+                coefs[s + b] = np.linalg.lstsq(A[i], y[i], rcond=None)[0]
     return {"names": ["Konstanta", *names], "coef": np.linalg.lstsq(A, y, rcond=None)[0].tolist(),
             "ci_low": np.percentile(coefs, 2.5, axis=0).tolist(),
             "ci_high": np.percentile(coefs, 97.5, axis=0).tolist()}
@@ -96,13 +107,13 @@ def _corr(scores, ys, xs):
             a, b, n = d[y].to_numpy(), d[x].to_numpy(), len(d)
             lab = f"{x} → {y}"
             r, p = stats.pearsonr(a, b)
-            par.append(_res("pearson", "Pearson", lab, r, p, _fisher_ci(r, n, 1 / np.sqrt(max(n - 3, 1))), r * r))
+            par.append(_res("pearson", "Pearson", lab, r, p, _fisher_ci(r, n, 1 / np.sqrt(max(n - 3, 1))), r, "r"))
             rho, p = stats.spearmanr(a, b)
             sp.append(_res("spearman", "Spearman", lab, rho, p,
-                           _fisher_ci(rho, n, np.sqrt((1 + rho ** 2 / 2) / max(n - 3, 1))), rho * rho))
+                           _fisher_ci(rho, n, np.sqrt((1 + rho ** 2 / 2) / max(n - 3, 1))), rho, "ρ"))
             tau, p = stats.kendalltau(a, b)
             uniq = min(len(np.unique(a)), len(np.unique(b))) / n
-            ke.append(_res("kendall", "Kendall tau-b", lab, tau, p, None, tau, recommended=bool(uniq < 0.5)))
+            ke.append(_res("kendall", "Kendall tau-b", lab, tau, p, None, tau, "τ", recommended=bool(uniq < 0.5)))
     return par, sp + ke, None
 
 
@@ -111,17 +122,18 @@ def _regr(scores, ys, xs):
     for y in ys:
         d = scores[[y, *xs]].dropna().astype(float)
         A = sm.add_constant(d[xs])
-        fit = sm.OLS(d[y], A).fit()
-        rob = sm.OLS(d[y], A).fit(cov_type="HC3")
+        model = sm.OLS(d[y], A)
+        fit = model.fit()
+        rob = model.fit(cov_type="HC3", use_t=True)
         bs = bootstrap_ols(d[y].to_numpy(), d[xs].to_numpy(), xs)
         for j, x in enumerate(xs):
             lab = f"{x} → {y}"
             beta = fit.params[x] * d[x].std() / d[y].std()
-            par.append(_res("ols", "Regresi OLS", lab, fit.params[x], fit.pvalues[x], fit.conf_int().loc[x], beta))
+            par.append(_res("ols", "Regresi OLS", lab, fit.params[x], fit.pvalues[x], fit.conf_int().loc[x], beta, "β terstandar"))
             boot.append(_res("bootstrap", "Bootstrap (5.000 sampel)", lab, bs["coef"][j + 1], None,
-                             (bs["ci_low"][j + 1], bs["ci_high"][j + 1]), beta))
+                             (bs["ci_low"][j + 1], bs["ci_high"][j + 1]), beta, "β terstandar"))
             hc.append(_res("hc3", "Galat baku robust (HC3)", lab, rob.params[x], rob.pvalues[x],
-                           rob.conf_int().loc[x], beta))
+                           rob.conf_int().loc[x], beta, "β terstandar"))
     return par, boot + hc, None
 
 
@@ -140,10 +152,10 @@ def _ind(scores, ys, xs):
         ci = t.confidence_interval()
         sp = np.sqrt(((len(a) - 1) * a.var(ddof=1) + (len(b) - 1) * b.var(ddof=1)) / (len(a) + len(b) - 2))
         par.append(_res("welch", "Uji-t Welch", lab, t.statistic, t.pvalue, (ci.low, ci.high),
-                        (a.mean() - b.mean()) / sp))
+                        (a.mean() - b.mean()) / sp, "d (Cohen)"))
         u = stats.mannwhitneyu(a, b, alternative="two-sided")
         alt.append(_res("mannwhitney", "Mann-Whitney U", lab, u.statistic, u.pvalue, None,
-                        2 * u.statistic / (len(a) * len(b)) - 1))
+                        2 * u.statistic / (len(a) * len(b)) - 1, "r rank-biserial"))
     return par, alt, None
 
 
@@ -154,12 +166,12 @@ def _paired(scores, ys, xs):
     t = stats.ttest_1samp(diff, 0.0)
     ci = t.confidence_interval()
     par = [_res("paired", "Uji-t berpasangan", lab, t.statistic, t.pvalue, (ci.low, ci.high),
-                diff.mean() / diff.std(ddof=1))]
+                diff.mean() / diff.std(ddof=1), "d_z")]
     nz = diff[diff != 0]
     rk = stats.rankdata(np.abs(nz))
     rbc = (rk[nz > 0].sum() - rk[nz < 0].sum()) / rk.sum() if len(nz) else 0.0
     w = stats.wilcoxon(diff)
-    return par, [_res("wilcoxon", "Wilcoxon signed-rank", lab, w.statistic, w.pvalue, None, rbc)], None
+    return par, [_res("wilcoxon", "Wilcoxon signed-rank", lab, w.statistic, w.pvalue, None, rbc, "r rank-biserial")], None
 
 
 def _anova(scores, ys, xs):
@@ -172,9 +184,9 @@ def _anova(scores, ys, xs):
         f = stats.f_oneway(*gs)
         ssb = sum(len(g) * (g.mean() - allv.mean()) ** 2 for g in gs)
         par.append(_res("anova", "ANOVA satu arah", lab, f.statistic, f.pvalue, None,
-                        ssb / ((allv - allv.mean()) ** 2).sum()))
+                        ssb / ((allv - allv.mean()) ** 2).sum(), "η²"))
         h = stats.kruskal(*gs)
-        alt.append(_res("kruskal", "Kruskal-Wallis", lab, h.statistic, h.pvalue, None, h.statistic / (n - 1)))
+        alt.append(_res("kruskal", "Kruskal-Wallis", lab, h.statistic, h.pvalue, None, h.statistic / (n - 1), "ε²"))
         d = scores[[y, "__group"]].dropna()
         post += [{**r, "label": f"{y}: {r['a']} vs {r['b']}"}
                  for r in dunn(d[y].to_numpy(), d["__group"].to_numpy())]

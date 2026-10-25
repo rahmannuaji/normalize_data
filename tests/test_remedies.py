@@ -53,3 +53,27 @@ def test_alternative_other_goals_and_json_types():
     assert alternative(s, _vars("Y1"), "normality_only") == {"parametric": [], "alternatives": [], "posthoc": None}
     for o in (c, p, a, t, alternative(s, _vars("Y1", xs=["X1"]), "regression")):
         json.dumps(o)
+
+def test_bootstrap_matches_per_resample_lstsq_reference():
+    rng = np.random.default_rng(3); X = rng.normal(size=(50, 2)); y = 1 + X @ [1, -2] + rng.normal(size=50)
+    out = bootstrap_ols(y, X, ["A", "B"], n_boot=200)
+    A = np.column_stack([np.ones(50), X]); r = np.random.default_rng(2026)
+    ref = np.array([np.linalg.lstsq(A[i], y[i], rcond=None)[0] for i in (r.integers(0, 50, 50) for _ in range(200))])
+    assert np.allclose(out["ci_low"], np.percentile(ref, 2.5, axis=0))
+    assert np.allclose(out["ci_high"], np.percentile(ref, 97.5, axis=0))
+
+def test_hc3_uses_t_distribution():
+    import statsmodels.api as sm
+    rng = np.random.default_rng(4); x = rng.normal(size=25); y = x + rng.exponential(size=25)
+    s = pd.DataFrame({"Y1": y, "X1": x})
+    out = alternative(s, _vars("Y1", xs=["X1"]), "regression")
+    hc = next(a for a in out["alternatives"] if a["id"] == "hc3")
+    ref = sm.OLS(y, sm.add_constant(x)).fit(cov_type="HC3", use_t=True)
+    assert hc["p"] == pytest.approx(ref.pvalues[1])
+
+def test_every_result_has_effect_name_and_correlation_effects_unsquared():
+    rng = np.random.default_rng(6); x = rng.normal(size=40)
+    s = pd.DataFrame({"Y1": -x + rng.normal(size=40), "X1": x})
+    out = alternative(s, _vars("Y1", xs=["X1"]), "correlation")
+    assert all(r["effect_name"] for r in out["parametric"] + out["alternatives"])
+    assert out["parametric"][0]["effect"] < 0 and out["parametric"][0]["effect_name"] == "r"
