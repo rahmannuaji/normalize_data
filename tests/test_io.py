@@ -57,3 +57,13 @@ def test_trailing_blank_lines_dropped(tmp_path):
 def test_comma_separated(tmp_path):
     df = _csv(tmp_path, "A,B\n1,2\n")
     assert list(df.columns) == ["A", "B"] and len(df) == 1
+
+def test_single_column_decimal_comma(tmp_path):
+    df = _csv(tmp_path, "Y1\n1,5\n2,5\n")
+    assert list(df.columns) == ["Y1"] and df["Y1"].tolist() == [1.5, 2.5]
+
+@pytest.mark.filterwarnings("ignore::pandas.errors.ParserWarning")
+def test_extra_fields_do_not_become_index(tmp_path):
+    # Baris lebih panjang dari header: kolom kelebihan dibuang, nilai tidak bergeser jadi indeks.
+    df = _csv(tmp_path, "A,B\n1,2,3\n4,5,6\n")
+    assert df["A"].tolist() == [1, 4] and df["B"].tolist() == [2, 5]
