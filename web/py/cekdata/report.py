@@ -39,9 +39,23 @@ def _p_eq(p):
     return f"p {fmt_p(p)}" if p < 0.001 else f"p = {fmt_p(p)}"
 
 
-def _check_par(c):
-    t = next((t for t in c["tests"] if t["id"] == "shapiro" and t.get("p") is not None), None) \
+def _main_test(c):
+    return next((t for t in c["tests"] if t["id"] == "shapiro" and t.get("p") is not None), None) \
         or next((t for t in c["tests"] if t.get("p") is not None), None)
+
+
+def _after_par(c, what):
+    t = _main_test(c)
+    if not t:
+        return ""
+    sym = _TEST_SYMBOL.get(t["id"], "statistik")
+    ok = c["verdict"]["status"] == "ok"
+    return (f"Setelah {what}, uji {t['name']} terhadap {c['label']} menghasilkan {sym} = {fmt_num(t['stat'])}, "
+            f"{_p_eq(t['p'])}, sehingga data {'berdistribusi normal' if ok else 'masih belum berdistribusi normal'}.")
+
+
+def _check_par(c):
+    t = _main_test(c)
     s = f"Uji normalitas dilakukan terhadap {c['label']} (n = {c['n']})"
     if t:
         sym = _TEST_SYMBOL.get(t["id"], "statistik")
@@ -69,14 +83,17 @@ def _fix_par(state):
         parts.append(f"Sebanyak {len(ex)} baris dikeluarkan dari analisis, yaitu {items}.")
     tr = state.get("transform")
     if tr:
-        s = f"Data ditransformasi dengan metode {_TRANSFORM_NAME.get(tr['method'], tr['method'])}"
-        if tr.get("lambda") is not None:
-            s += f" (λ = {fmt_num(tr['lambda'], 2)})"
-        if tr.get("reflected"):
-            s += " setelah dilakukan pencerminan"
-        if tr.get("shift"):
-            s += f" dan penggeseran sebesar {fmt_num(tr['shift'], 2)}"
-        parts.append(s + ".")
+        items = []
+        for i, (name, info) in enumerate(tr.items()):
+            t = f"{name} {'ditransformasi dengan' if i == 0 else 'dengan'} {_TRANSFORM_NAME.get(info['method'], info['method'])}"
+            if info.get("lambda") is not None:
+                t += f" (λ = {fmt_num(info['lambda'], 2)})"
+            if info.get("reflected"):
+                t += " setelah dicerminkan"
+            if info.get("shift"):
+                t += f" dan digeser sebesar {fmt_num(info['shift'], 2)}"
+            items.append(t)
+        parts.append("; ".join(items) + ".")
     return " ".join(parts)
 
 
@@ -103,6 +120,9 @@ def build_report(state):
     fix = _fix_par(state)
     if fix:
         pars.append(fix)
+    what = " dan ".join(w for w, on in (("transformasi", tr), ("pengeluaran data", state.get("excluded"))) if on)
+    if what:
+        pars += [p for p in (_after_par(c, what) for c in state.get("after") or []) if p]
     if chosen:
         pars.append(_chosen_par(chosen))
     keys = ["kim2013", "ghasemi2012"]
@@ -112,7 +132,6 @@ def build_report(state):
         keys.append("west1995")
     if chosen:
         keys += _BY_CHOSEN.get(chosen["id"], [])
-    if tr and tr["method"] in _BY_TRANSFORM:
-        keys.append(_BY_TRANSFORM[tr["method"]])
+    keys += [_BY_TRANSFORM[i["method"]] for i in (tr or {}).values() if i["method"] in _BY_TRANSFORM]
     keys = list(dict.fromkeys(keys))
     return {"text": "\n\n".join(pars), "references": sorted(REFERENCES[k] for k in keys)}

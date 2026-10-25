@@ -25,11 +25,11 @@ def test_excluded_transform_effect():
              "moments": {"skew": 1.0, "kurt": 0.0, "z_skew": 8.0, "z_kurt": 1.0, "se_skew": .1, "se_kurt": .2},
              "verdict": {"status": "warn", "rule": ">300"}, "findings": []}
     r = build_report({"goal": "correlation", "checks": [check], "fixes": [], "excluded": {5: "salah_input"},
-                      "transform": {"method": "boxcox", "lambda": 0.5, "shift": 0, "reflected": False},
+                      "transform": {"Y1": {"method": "boxcox", "lambda": 0.5, "shift": 0, "reflected": True}, "X1": {"method": "boxcox", "lambda": 0.58, "shift": 0, "reflected": False}},
                       "chosen": {"id": "spearman", "name": "Spearman", "label": "X dan Y", "stat": 0.44, "p": 0.0001,
                                  "ci": None, "effect": 0.44, "effect_name": "ρ"}})
     t = r["text"]
-    assert "Salah input" in t and "0,5" in t and "ρ = 0,44" in t and "p < 0,001" in t
+    assert "Salah input" in t and "Y1 ditransformasi dengan Box-Cox (λ = 0,50) setelah dicerminkan; X1 dengan Box-Cox (λ = 0,58)" in t and "ρ = 0,44" in t and "p < 0,001" in t
     refs = " ".join(r["references"])
     assert "West" in refs and "Box" in refs and "Field" in refs
 
@@ -43,6 +43,16 @@ def _chk(tid, name):
 
 def test_symbol_for_lilliefors_and_midway_reference_and_transform_name():
     r = build_report({"goal": "regression", "checks": [_chk("lilliefors", "Lilliefors")], "fixes": [], "excluded": {},
-                      "transform": {"method": "sqrt", "lambda": None, "shift": 0, "reflected": False}, "chosen": None})
+                      "transform": {"Y1": {"method": "sqrt", "lambda": None, "shift": 0, "reflected": False}}, "chosen": None})
     assert "D = 0,123" in r["text"] and "akar kuadrat" in r["text"]
     assert any("White" in x and "Royal Society Open Science" in x for x in r["references"])
+
+
+def test_after_sentence_states_outcome():
+    bad = {**_chk("shapiro", "Shapiro-Wilk"), "verdict": {"status": "bad", "rule": "n<50"}}
+    ok = _chk("shapiro", "Shapiro-Wilk")
+    base = {"goal": "regression", "checks": [bad], "fixes": [], "excluded": {5: "salah_input"}, "transform": None, "chosen": None}
+    t = build_report({**base, "after": [ok]})["text"]
+    assert "Setelah pengeluaran data, uji Shapiro-Wilk terhadap Skor X menghasilkan W = 0,123, p = 0,200, sehingga data berdistribusi normal." in t
+    assert "masih belum berdistribusi normal" in build_report({**base, "after": [bad]})["text"]
+    assert "Setelah" not in build_report({**base, "excluded": {}})["text"]

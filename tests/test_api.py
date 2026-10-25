@@ -34,7 +34,7 @@ def test_transform_and_exclude_return_before_after():
     call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet="")
     call("prepare", variables=[Y, X], group=None); call("check", goal="regression", alpha=0.05)
     t = call("remedy", kind="transform", method="sqrt")
-    assert t["info"]["method"] == "sqrt" and t["before"][0]["n"] == t["after"][0]["n"] == 147
+    assert t["info"]["Y1"]["method"] == "sqrt" and t["before"][0]["n"] == t["after"][0]["n"] == 147
     e = call("remedy", kind="exclude", reasons={"12": "salah_input"})
     assert e["before"][0]["n"] == 147 and e["after"][0]["n"] == 146
 
@@ -42,7 +42,77 @@ def test_errors_are_indonesian_json():
     api._S.clear()
     assert call("prepare", variables=[Y, X], group=None)["error"].startswith("Data belum dimuat")
     call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
-    assert call("prepare", variables=[{**Y, "columns": ["ZZ"]}], group=None)["error"].startswith("Terjadi kesalahan tak terduga: KeyError")
+    assert call("prepare", variables=[{**Y, "columns": ["ZZ"]}], group=None)["error"] == 'Kolom "ZZ" tidak ditemukan.'
+    assert call("set_cell", row=1, column="ZZ", value=1)["error"] == 'Kolom "ZZ" tidak ditemukan.'
+    assert call("set_cell", row=999, column="S1", value=1)["error"] == "Baris 999 tidak ada di data."
+    assert call("set_cell", row="a", column="S1", value=1)["error"].startswith("Terjadi kesalahan tak terduga: TypeError")
 
 def test_nan_becomes_null():
     assert json.loads(api._dumps({"a": float("nan"), "b": [float("inf")]})) == {"a": None, "b": [None]}
+
+
+def _setup(goal="regression", **kw):
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    call("prepare", variables=[{**Y, "reversed": ["P7"]}, X], group=None)
+    return call("check", goal=goal, alpha=0.05)
+
+
+def test_exclude_resets_stale_alternatives():
+    _setup()
+    call("remedy", kind="alternative")
+    call("remedy", kind="exclude", reasons={"87": "salah_input"})
+    rep = call("report", chosen_id="bootstrap")
+    assert "bootstrap" not in rep["text"].lower()  # alternatif lama dibuang
+    call("remedy", kind="alternative")
+    after = call("report", chosen_id="bootstrap")["text"]
+    assert "bootstrap" in after.lower() and "Responden" not in after and "Salah input" in after
+    _setup()
+    call("remedy", kind="alternative")
+    before = call("report", chosen_id="bootstrap")["text"]
+    ci = lambda t: t[t.index("CI 95%"):].split("]")[0]
+    assert ci(before) != ci(after)
+
+
+def test_transform_clear_and_report_omits_transform_when_chosen():
+    _setup()
+    call("remedy", kind="alternative")
+    call("remedy", kind="transform", method="sqrt")
+    assert "akar kuadrat" in call("report", chosen_id=None)["text"]
+    assert "Y1 ditransformasi dengan akar kuadrat" in call("report", chosen_id=None)["text"]
+    assert "akar kuadrat" not in call("report", chosen_id="bootstrap")["text"]
+    assert call("remedy", kind="transform", method=None)["info"] is None
+    assert "akar kuadrat" not in call("report", chosen_id=None)["text"]
+
+
+def test_report_has_after_sentence_for_remedy():
+    _setup()
+    call("remedy", kind="transform", method="sqrt")
+    assert "Setelah transformasi, uji Shapiro-Wilk" in call("report", chosen_id=None)["text"]
+
+
+def test_set_cell_records_blank_and_int_and_dedupes():
+    _setup()
+    call("set_cell", row=20, column="P2", value=4)
+    call("set_cell", row=87, column="S4", value=5)
+    call("set_cell", row=87, column="S4", value=3)
+    fixes = {(f["row"], f["column"]): f for f in api._S["fixes"]}
+    assert fixes[(20, "P2")]["old"] == "kosong" and fixes[(87, "S4")]["old"] == 55 and fixes[(87, "S4")]["new"] == 3
+    assert len(api._S["fixes"]) == 2
+    call("prepare", variables=[Y, X], group=None)
+    call("check", goal="regression", alpha=0.05)
+    text = call("report", chosen_id=None)["text"]
+    assert "kosong" in text and "5.0" not in text and "55.0" not in text
+
+
+def test_excel_datetime_column(tmp_path):
+    import pandas as pd
+    f = tmp_path / "t.xlsx"
+    pd.DataFrame({"tgl": pd.to_datetime(["2026-01-02", None]), "v": [1, 2]}).to_excel(f, index=False)
+    s = call("load_table", path=str(f), sheet="")
+    assert "error" not in s and s["n_rows"] == 2 and s["preview"][0][0].startswith("2026-01-02")
+
+
+def test_excluded_row_warning_not_in_findings_after():
+    _setup()
+    r = call("remedy", kind="exclude", reasons={"87": "salah_input"})
+    assert all(f["id"] != "data_error" for f in r["after"][0]["findings"])

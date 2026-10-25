@@ -1,14 +1,17 @@
 """Satu-satunya pintu masuk dari browser (Pyodide): JSON string masuk, JSON string keluar."""
+import datetime
 import functools
 import json
 import math
 
 import numpy as np
+import pandas as pd
 
 from . import diagnose as dg, io, normality, prep, remedies, report as rp, target as tg
 
 _S = {}
 _NOT_LOADED = "Data belum dimuat. Masukkan data di langkah 1."
+_BLANK = "kosong"
 
 
 def _clean(o):
@@ -20,6 +23,10 @@ def _clean(o):
         return _clean(o.tolist())
     if isinstance(o, np.generic):
         o = o.item()
+    if o is pd.NaT:
+        return None
+    if isinstance(o, (datetime.date, datetime.datetime)):  # Timestamp turunan datetime
+        return o.isoformat()
     if isinstance(o, float) and not math.isfinite(o):
         return None
     return o
@@ -48,16 +55,18 @@ def _need(key="raw"):
         raise ValueError("Atur variabel dulu di langkah 2." if key == "scores" else "Pilih tujuan analisis dan jalankan pengecekan dulu.")
 
 
-def _work(transformed=True):
-    """Skor setelah baris dikeluarkan, lalu (opsional) transformasi."""
+def _excluded_scores():
     s = _S["scores"]
-    if _S["excluded"]:
-        s = remedies.exclude_rows(s, _S["excluded"])
-    tr = _S["transform"]
-    if transformed and tr:
+    return remedies.exclude_rows(s, _S["excluded"]) if _S["excluded"] else s
+
+
+def _work(transformed=True):
+    """Skor setelah baris dikeluarkan, lalu (opsional) transformasi per variabel."""
+    s = _excluded_scores()
+    if transformed and _S["transform"]:
         s = s.copy()
-        for name in _transform_names():
-            s[name] = remedies.transform(s[name], tr["method"])[0]
+        for name, info in _S["transform"].items():
+            s[name] = remedies.transform(s[name], info["method"])[0]
     return s
 
 
@@ -66,17 +75,32 @@ def _transform_names():
     return [v["name"] for v in _S["variables"] if v["role"] == "Y" or not only_y]
 
 
+def _set_transform(method):
+    s = _excluded_scores()
+    _S["transform"] = {n: remedies.transform(s[n], method)[1] for n in _transform_names()} if method else None
+
+
 def _checks(scores, transformed):
     out = []
     ranges = _S["info"]["score_range"]
+    warns = [w for w in _S["info"]["warnings"] if w.get("row") not in _S["excluded"]]
     for t in tg.build_targets(scores, _S["variables"], _S["goal"]):
         c = normality.check_target(t, _S["goal"], _S["alpha"])
         y = t["y"] or t["label"]
         rng = None if transformed else ranges.get(y)
         yv = scores.loc[[r - 1 for r in t["rows"]], t["y"]].to_numpy() if t["kind"] == "residual" else t["values"]
-        c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, _S["info"]["warnings"]) if c["moments"] else []
+        c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, warns) if c["moments"] else []
         out.append(c)
     return out
+
+
+def _cell(v):
+    """Nilai sel untuk dicatat: kosong -> "kosong", bilangan bulat -> int."""
+    if v is None or (isinstance(v, str) and not v.strip()) or (not isinstance(v, str) and pd.isna(v)):
+        return _BLANK
+    if isinstance(v, np.generic):
+        v = v.item()
+    return int(v) if isinstance(v, float) and v.is_integer() else v
 
 
 @_endpoint
@@ -91,19 +115,30 @@ def load_table(path, sheet=None):
 def set_cell(row, column, value):
     _need()
     raw = _S["raw"]
-    if column not in raw.columns or not 1 <= row <= len(raw):
-        raise ValueError(f"Sel baris {row} kolom {column} tidak ada.")
-    old = raw.at[row - 1, column]
+    if column not in raw.columns:
+        raise ValueError(f"Kolom \"{column}\" tidak ditemukan.")
+    if not 1 <= row <= len(raw):
+        raise ValueError(f"Baris {row} tidak ada di data.")
+    old, new = _cell(raw.at[row - 1, column]), _cell(value)
+    prev = next((f for f in _S["fixes"] if f["row"] == row and f["column"] == column), None)
+    if prev:
+        old = prev["old"]
+        _S["fixes"].remove(prev)
     raw[column] = raw[column].astype(object)
-    raw.at[row - 1, column] = value
-    _S["fixes"].append({"row": row, "column": column, "old": None if old != old else old, "new": value})
+    raw.at[row - 1, column] = None if new == _BLANK else value
+    if old != new:
+        _S["fixes"].append({"row": row, "column": column, "old": old, "new": new})
     return {"ok": True}
 
 
 @_endpoint
 def prepare(variables, group=None):
     _need()
-    scores, info = prep.build_scores(_S["raw"], variables, group or None)
+    group = group or None
+    for c in [c for v in variables for c in v["columns"]] + ([group] if group else []):
+        if c not in _S["raw"].columns:
+            raise ValueError(f"Kolom \"{c}\" tidak ditemukan.")
+    scores, info = prep.build_scores(_S["raw"], variables, group)
     for k in ("goal", "alpha", "checks"):
         _S.pop(k, None)
     _S.update(variables=variables, group=group, scores=scores, info=info, excluded={}, transform=None, alternatives=[])
@@ -128,19 +163,18 @@ def remedy(kind, method=None, reasons=None):
         return _S["alternatives"]
     before = _checks(_work(), _S["transform"] is not None)
     if kind == "transform":
-        # ponytail: info hanya dari variabel pertama; metode sama dipakai untuk semua variabel
-        s = _S["scores"] if not _S["excluded"] else remedies.exclude_rows(_S["scores"], _S["excluded"])
-        info = remedies.transform(s[_transform_names()[0]], method)[1]
-        _S["transform"] = info
+        _set_transform(method)  # method null = batalkan transformasi
     elif kind == "exclude":
         ex = {int(r): k for r, k in reasons.items()}
         remedies.exclude_rows(_S["scores"], ex)  # validasi alasan/baris sebelum disimpan
         _S["excluded"] = ex
-        info = None
+        _S["alternatives"] = []  # hasil alternatif lama dihitung dari data sebelum pengeluaran
+        if _S["transform"]:
+            _set_transform(next(iter(_S["transform"].values()))["method"])
     else:
         raise ValueError(f"Jenis perbaikan tidak dikenal: {kind}.")
     out = {"before": before, "after": _checks(_work(), _S["transform"] is not None)}
-    return {"info": info, **out} if kind == "transform" else out
+    return {"info": _S["transform"], **out} if kind == "transform" else out
 
 
 @_endpoint
@@ -149,5 +183,7 @@ def report(chosen_id=None):
     _need("checks")
     alts = _S["alternatives"]["alternatives"] if _S["alternatives"] else []
     chosen = next((a for a in alts if a["id"] == chosen_id), None) if chosen_id else None
-    return rp.build_report({"goal": _S["goal"], "checks": _S["checks"], "fixes": _S["fixes"],
-                            "excluded": _S["excluded"], "transform": _S["transform"], "chosen": chosen})
+    tr = None if chosen else _S["transform"]  # alternatif dijalankan pada data tanpa transformasi
+    after = _checks(_work(not chosen), not chosen and tr is not None) if (tr or _S["excluded"]) else []
+    return rp.build_report({"goal": _S["goal"], "checks": _S["checks"], "fixes": _S["fixes"], "excluded": _S["excluded"],
+                            "transform": tr, "chosen": chosen, "after": after})
