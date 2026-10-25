@@ -205,6 +205,35 @@ details > div { padding: 0 14px 14px; }
 .report { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-btn); padding: 18px; font-family: var(--font-report); font-size: 16px; line-height: 1.7; }
 .ref { font-size: 14px; color: var(--muted); padding-left: 22px; text-indent: -22px; margin: var(--space-xs) 0; }
 
+/* ---------- Langkah 1–2: formulir, chip item, data ---------- */
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.drop { display: block; }
+.drop:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.drop > * + * { margin-top: var(--space-xs); }
+button.opt { text-align: left; width: 100%; font: inherit; color: inherit; }
+.field { display: grid; gap: var(--space-xs); font-size: 14px; font-weight: 500; align-content: start; }
+.field .caption { font-weight: 400; }
+.field.grow { flex: 1; min-width: 0; }
+.inp { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-btn); background: var(--surface); font-weight: 400; }
+.inp:hover { border-color: color-mix(in srgb, var(--brand) 35%, var(--line)); }
+.inp.fix { width: 120px; }
+.vhead { display: flex; align-items: flex-end; gap: var(--space-sm); margin-bottom: var(--space-md); flex-wrap: wrap; }
+.vrow { margin-top: var(--space-sm); }
+.scale { display: flex; align-items: center; gap: var(--space-sm); font-weight: 400; }
+.scale .inp { min-width: 0; }
+.fixrow { display: inline-flex; align-items: center; gap: var(--space-sm); margin-top: var(--space-xs); }
+.chip.grp { padding: 0; gap: 0; }
+.chip.grp::after { display: none; }
+.chip.grp button { position: relative; border: 0; background: none; cursor: pointer; min-height: 34px; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 13px; }
+.chip.grp button::after { content: ""; position: absolute; inset: -4px 0; } /* area sentuh 44px */
+.chip.grp button + button { padding: 5px 10px 5px 4px; }
+.chip.grp .ic { width: 15px; height: 15px; vertical-align: -3px; }
+.chip.sel { border-color: var(--brand); background: var(--brand-soft); }
+.chip.sel.rev { border-color: var(--warn); background: var(--warn-soft); }
+.note .btn.small { margin-left: var(--space-xs); }
+td[contenteditable] { min-width: 72px; cursor: text; }
+td[contenteditable]:focus-visible { outline-offset: -2px; background: var(--brand-soft); }
+
 /* ---------- Beranda ---------- */
 .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; align-items: center; }
 .hero .micro { color: var(--muted); font-size: 13px; margin: 14px 0 0; }
