@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Normalin — cek normalitas data skripsi</title>
+<meta name="description" content="Cek normalitas data skripsimu, lihat penyebabnya, lalu pilih analisis yang tetap sah. Semua dihitung di browsermu.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script defer src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Langsung ke isi</a>
+
+<header class="site">
+  <div class="wrap top">
+    <a class="logo" href="#" data-go="0" aria-label="Normalin, ke beranda">
+      <svg viewBox="0 0 136 28" aria-hidden="true"><use href="assets/logo.svg#logo"/></svg>
+    </a>
+    <p class="privacy"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#lock"/></svg>Data tidak dikirim ke mana pun</p>
+  </div>
+  <nav class="wrap steps" id="steps" aria-label="Langkah" hidden></nav>
+  <div class="loadbar" id="loadbar" role="status">
+    <p class="wrap"><span id="loadText">Menyiapkan mesin statistik… (sekali saja, sekitar 15 MB)</span></p>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+<section class="page" data-step="0" data-title="Beranda">
+  <div class="hero">
+    <div>
+      <h1 tabindex="-1">Datamu tidak normal?<br><span class="accent">Tenang, ada jalannya.</span></h1>
+      <p class="sub lead">Cek normalitas dengan semua metode, lihat bagian mana yang bermasalah, lalu pilih solusi yang sah dan bisa kamu pertanggungjawabkan di depan dosen penguji.</p>
+      <div class="actions">
+        <button class="btn primary" type="button" data-go="1">Mulai cek data<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+        <button class="btn" type="button" data-go="1" data-tab="contoh">Coba pakai data contoh</button>
+      </div>
+      <p class="micro">Gratis · Tanpa daftar · Semua dihitung di browsermu</p>
+    </div>
+    <figure class="card hero-chart">
+      <svg class="chart" viewBox="0 0 360 200" role="img" aria-label="Histogram data contoh: skor menumpuk di kanan dengan ekor panjang di kiri, dibandingkan kurva normal">
+        <line class="axis" x1="30" y1="170" x2="350" y2="170"/>
+        <line class="axis" x1="30" y1="10" x2="30" y2="170"/>
+        <rect class="bar tail" x="73.7" y="165.7" width="19.3" height="4.3" rx="3"/>
+        <rect class="bar tail" x="95" y="157.2" width="19.3" height="12.8" rx="3"/>
+        <rect class="bar" x="116.3" y="157.2" width="19.3" height="12.8" rx="3"/>
+        <rect class="bar" x="137.7" y="157.2" width="19.3" height="12.8" rx="3"/>
+        <rect class="bar" x="159" y="114.4" width="19.3" height="55.6" rx="3"/>
+        <rect class="bar" x="180.3" y="93" width="19.3" height="77" rx="3"/>
+        <rect class="bar" x="201.7" y="71.6" width="19.3" height="98.4" rx="3"/>
+        <rect class="bar" x="223" y="28.8" width="19.3" height="141.2" rx="3"/>
+        <rect class="bar" x="244.3" y="24.5" width="19.3" height="145.5" rx="3"/>
+        <rect class="bar" x="265.7" y="127.2" width="19.3" height="42.8" rx="3"/>
+        <rect class="bar" x="287" y="152.9" width="19.3" height="17.1" rx="3"/>
+        <rect class="bar" x="308.3" y="165.7" width="19.3" height="4.3" rx="3"/>
+        <rect class="bar" x="329.7" y="165.7" width="19.3" height="4.3" rx="3"/>
+        <path class="curve" d="M30 170L34.3 170L38.5 170L42.8 170L47.1 170L51.3 170L55.6 169.9L59.9 169.9L64.1 169.9L68.4 169.8L72.7 169.7L76.9 169.6L81.2 169.5L85.5 169.3L89.7 169L94 168.6L98.3 168.1L102.5 167.5L106.8 166.7L111.1 165.7L115.3 164.5L119.6 163L123.9 161.1L128.1 158.8L132.4 156.2L136.7 153L140.9 149.4L145.2 145.2L149.5 140.4L153.7 135.1L158 129.3L162.3 122.9L166.5 116.1L170.8 108.9L175.1 101.5L179.3 93.9L183.6 86.3L187.9 78.9L192.1 71.8L196.4 65.2L200.7 59.3L204.9 54.2L209.2 50.1L213.5 47L217.7 45.2L222 44.6L226.3 45.2L230.5 47L234.8 50.1L239.1 54.2L243.3 59.3L247.6 65.2L251.9 71.8L256.1 78.9L260.4 86.3L264.7 93.9L268.9 101.5L273.2 108.9L277.5 116.1L281.7 122.9L286 129.3L290.3 135.1L294.5 140.4L298.8 145.2L303.1 149.4L307.3 153L311.6 156.2L315.9 158.8L320.1 161.1L324.4 163L328.7 164.5L332.9 165.7L337.2 166.7L341.5 167.5L345.7 168.1L350 168.6"/>
+        <text class="tick" x="51.3" y="186">−4</text>
+        <text class="tick" x="136.7" y="186">−2</text>
+        <text class="tick" x="222" y="186">0</text>
+        <text class="tick" x="307.3" y="186">2</text>
+      </svg>
+      <figcaption>Data contoh: skor menumpuk di kanan, ekor panjang di kiri (merah). Garis = kurva normal.</figcaption>
+    </figure>
+  </div>
+  <div class="grid g3 feats">
+    <div class="card feat"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#upload"/></svg><div><h2>Upload atau ketik sendiri</h2><p>CSV, Excel, atau tempel langsung dari Excel. Item kuesioner bisa langsung dijumlahkan.</p></div></div>
+    <div class="card feat"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#search"/></svg><div><h2>Tahu letak masalahnya</h2><p>Responden mana, item mana, dan kenapa distribusinya menyimpang.</p></div></div>
+    <div class="card feat"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#copy"/></svg><div><h2>Siap tempel ke Bab IV</h2><p>Paragraf interpretasi, tabel, dan rujukan untuk tiap keputusan.</p></div></div>
+  </div>
+</section>
+
+<section class="page" data-step="1" data-title="Data">
+  <h2 tabindex="-1">Masukkan datamu</h2>
+  <p class="sub">Pilih salah satu cara. Datamu tetap di laptopmu.</p>
+  <div id="step1"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="0"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn primary" type="button" id="next1" data-go="2" disabled>Lanjut: atur variabel<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+  </div>
+</section>
+
+<section class="page" data-step="2" data-title="Variabel">
+  <h2 tabindex="-1">Atur variabel</h2>
+  <p class="sub">Tentukan kolom mana yang jadi Y dan X. Kalau datamu berupa item kuesioner, pilih item-itemnya dan kami jumlahkan.</p>
+  <div id="step2"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="1"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn primary" type="button" id="next2" data-go="3">Lanjut: pilih tujuan<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+  </div>
+</section>
+
+<section class="page" data-step="3" data-title="Tujuan">
+  <h2 tabindex="-1">Kamu mau menganalisis apa?</h2>
+  <p class="sub">Ini menentukan <b>apa yang sebenarnya harus normal</b>. Tiap analisis punya syarat yang berbeda.</p>
+  <div id="step3"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="2"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn primary" type="button" id="next3">Jalankan semua uji<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+  </div>
+</section>
+
+<section class="page" data-step="4" data-title="Hasil">
+  <h2 tabindex="-1">Hasil uji normalitas</h2>
+  <div id="step4"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="3"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn primary" type="button" data-go="5">Kenapa tidak normal?<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+  </div>
+</section>
+
+<section class="page" data-step="5" data-title="Penyebab">
+  <h2 tabindex="-1">Kenapa datamu tidak normal?</h2>
+  <div id="step5"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="4"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn primary" type="button" data-go="6">Lihat solusi<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+  </div>
+</section>
+
+<section class="page" data-step="6" data-title="Solusi">
+  <h2 tabindex="-1">Pilihan solusi</h2>
+  <p class="sub">Urut dari yang paling dianjurkan. Klik untuk membuka dan menjalankan.</p>
+  <div id="step6"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="5"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn primary" type="button" data-go="7">Buat laporan<svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-right"/></svg></button>
+  </div>
+</section>
+
+<section class="page" data-step="7" data-title="Laporan">
+  <h2 tabindex="-1">Laporan siap tempel</h2>
+  <p class="sub">Salin ke Bab IV, lalu sesuaikan gaya bahasanya.</p>
+  <div id="step7"></div>
+  <div class="nav">
+    <button class="btn" type="button" data-go="6"><svg class="ic" aria-hidden="true"><use href="assets/icons.svg#arrow-left"/></svg>Kembali</button>
+    <button class="btn" type="button" data-go="0">Selesai, ke beranda</button>
+  </div>
+</section>
+
+</main>
+
+<footer class="site" id="footer" hidden>
+  <div class="wrap">dibuat oleh <span id="author"></span></div>
+</footer>
+</body>
+</html>
