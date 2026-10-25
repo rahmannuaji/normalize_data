@@ -239,3 +239,5 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+/* SVG skala ~0,86 di 375px: 17 satuan viewBox ≈ 14,6px, tetap ≥12px sampai ~320px */
+@media (max-width: 480px) { .chart .tick { font-size: 17px; } }
