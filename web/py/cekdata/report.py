@@ -4,8 +4,8 @@ from .remedies import REASONS
 REFERENCES = {
     "kim2013": "Kim, H.-Y. (2013). Statistical notes for clinical researchers: Assessing normal distribution (2) using skewness and kurtosis. Restorative Dentistry & Endodontics, 38(1), 52–54. https://doi.org/10.5395/rde.2013.38.1.52",
     "ghasemi2012": "Ghasemi, A., & Zahediasl, S. (2012). Normality tests for statistical analysis: A guide for non-statisticians. International Journal of Endocrinology and Metabolism, 10(2), 486–489. https://doi.org/10.5812/ijem.3505",
-    "midway2025": "Midway, S. R. (2025). Data analysis in R. https://bookdown.org/steve_midway/DAR/",
-    "west1995": "West, S. G., Finch, J. F., & Curran, P. J. (1995). Structural equation models with nonnormal variables: Problems and remedies. In R. H. Hoyle (Ed.), Structural equation modeling: Concepts, issues, and applications (pp. 56–75). Sage.",
+    "midway2025": "Midway, S. R., & White, J. W. (2025). Testing for normality in regression models: Mistakes abound (but may not matter). Royal Society Open Science, 12(4), 241904. https://doi.org/10.1098/rsos.241904",
+    "west1995": "West, S. G., Finch, J. F., & Curran, P. J. (1995). Structural equation models with nonnormal variables: Problems and remedies. Dalam R. H. Hoyle (Ed.), Structural equation modeling: Concepts, issues, and applications (hlm. 56–75). Sage.",
     "field2018": "Field, A. (2018). Discovering statistics using IBM SPSS Statistics (5th ed.). Sage.",
     "efron1993": "Efron, B., & Tibshirani, R. J. (1993). An introduction to the bootstrap. Chapman & Hall.",
     "boxcox1964": "Box, G. E. P., & Cox, D. R. (1964). An analysis of transformations. Journal of the Royal Statistical Society: Series B (Methodological), 26(2), 211–252. https://doi.org/10.1111/j.2517-6161.1964.tb00553.x",
@@ -18,7 +18,10 @@ _BY_CHOSEN = {"bootstrap": ["efron1993"], "hc3": ["hayes2007"], "kruskal": ["dun
               "mannwhitney": ["field2018"], "wilcoxon": ["field2018"], "spearman": ["field2018"],
               "kendall": ["field2018"]}
 _BY_TRANSFORM = {"boxcox": "boxcox1964", "yeojohnson": "yeojohnson2000"}
-_TEST_SYMBOL = {"shapiro": "W", "ks": "D", "lilliefors": "D", "ad": "A²", "dagostino": "K²", "jb": "JB"}
+_TEST_SYMBOL = {"shapiro": "W", "lilliefors": "D", "ks_classic": "D", "anderson": "A²",
+                "jarque_bera": "JB", "dagostino": "K²"}
+_TRANSFORM_NAME = {"log": "logaritma natural", "sqrt": "akar kuadrat", "reciprocal": "kebalikan (1/x)",
+                   "boxcox": "Box-Cox", "yeojohnson": "Yeo-Johnson"}
 _STATUS = {"ok": "tidak menunjukkan penyimpangan dari distribusi normal",
            "warn": "menunjukkan penyimpangan ringan dari distribusi normal",
            "bad": "menyimpang dari distribusi normal"}
@@ -66,7 +69,7 @@ def _fix_par(state):
         parts.append(f"Sebanyak {len(ex)} baris dikeluarkan dari analisis, yaitu {items}.")
     tr = state.get("transform")
     if tr:
-        s = f"Data ditransformasi dengan metode {tr['method']}"
+        s = f"Data ditransformasi dengan metode {_TRANSFORM_NAME.get(tr['method'], tr['method'])}"
         if tr.get("lambda") is not None:
             s += f" (λ = {fmt_num(tr['lambda'], 2)})"
         if tr.get("reflected"):

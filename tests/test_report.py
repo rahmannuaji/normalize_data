@@ -32,3 +32,17 @@ def test_excluded_transform_effect():
     assert "Salah input" in t and "0,5" in t and "ρ = 0,44" in t and "p < 0,001" in t
     refs = " ".join(r["references"])
     assert "West" in refs and "Box" in refs and "Field" in refs
+
+
+def _chk(tid, name):
+    return {"label": "Skor X", "n": 40,
+            "tests": [{"id": tid, "name": name, "stat": 0.123, "p": 0.2, "rejected": False, "skipped_reason": None}],
+            "moments": {"skew": None, "kurt": None, "z_skew": None, "z_kurt": None, "se_skew": None, "se_kurt": None},
+            "verdict": {"status": "ok", "rule": "n<50"}, "findings": []}
+
+
+def test_symbol_for_lilliefors_and_midway_reference_and_transform_name():
+    r = build_report({"goal": "regression", "checks": [_chk("lilliefors", "Lilliefors")], "fixes": [], "excluded": {},
+                      "transform": {"method": "sqrt", "lambda": None, "shift": 0, "reflected": False}, "chosen": None})
+    assert "D = 0,123" in r["text"] and "akar kuadrat" in r["text"]
+    assert any("White" in x and "Royal Society Open Science" in x for x in r["references"])
