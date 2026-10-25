@@ -25,7 +25,7 @@ def bootstrap_ols(y, X, names, n_boot=5000, seed=2026):
     for s in range(0, n_boot, 250):
         c = min(250, n_boot - s)
         idx = rng.integers(0, n, (c, n))  # same stream as c sequential draws of n
-        W = np.bincount((idx + np.arange(c)[:, None] * n).ravel(), minlength=c * n).reshape(c, n)
+        W = np.bincount((idx + np.arange(c)[:, None] * n).ravel().astype(np.intp), minlength=c * n).reshape(c, n)
         try:
             coefs[s:s + c] = np.linalg.solve((W @ P).reshape(c, k, k), (W @ Q)[:, :, None])[:, :, 0]
         except np.linalg.LinAlgError:  # resample with collinear columns: fall back to lstsq

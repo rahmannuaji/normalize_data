@@ -149,3 +149,14 @@ def test_verdict_override_flag():
     v = nm.check_target(t, "ttest_ind", 0.05)["verdict"]
     assert v["status"] == "warn" and v["override"] == "kelompok_besar"
     assert nm.check_target({**t, "groups_n": None}, "ttest_ind", 0.05)["verdict"]["override"] is None
+
+
+def test_export_scores_full_rows_with_exclusion_and_transform():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet="")
+    call("prepare", variables=[Y, X], group=None); call("check", goal="regression", alpha=0.05)
+    call("remedy", kind="exclude", reasons={"12": "salah_input"})
+    call("remedy", kind="transform", method="sqrt")
+    e = call("export_scores")
+    assert e["columns"] == ["Baris", "Y1", "X1", "Y1 (transformasi)"]
+    assert len(e["rows"]) == 146 and all(r[0] != 12 for r in e["rows"])
+    assert call("export_scores", transformed=False)["columns"] == ["Baris", "Y1", "X1"]

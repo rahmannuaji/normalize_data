@@ -210,3 +210,15 @@ def report(chosen_id=None):
     after = _checks(_work(not chosen), not chosen and tr is not None) if (tr or _S["excluded"]) else []
     return rp.build_report({"goal": _S["goal"], "checks": _S["checks"], "fixes": _S["fixes"], "excluded": _S["excluded"],
                             "transform": tr, "chosen": chosen, "after": after})
+
+
+@_endpoint
+def export_scores(transformed=True):
+    """Skor kerja penuh (setelah perbaikan dan pengeluaran baris) untuk diunduh sebagai CSV; kolom transformasi ditambahkan bila ada."""
+    _need("scores")
+    base = _excluded_scores()
+    work = _work(transformed)
+    out = base.copy()
+    for name in (_S["transform"] or {}) if transformed else []:
+        out[f"{name} (transformasi)"] = work[name]
+    return {"columns": ["Baris", *out.columns], "rows": [[int(i) + 1, *r] for i, r in zip(out.index, out.to_numpy().tolist())]}

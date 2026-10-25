@@ -1,6 +1,7 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
 import { ready, call, writeFile } from "./engine.js";
 import { initResults } from "./results.js";
+import { initRemedy } from "./remedy.js";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 
@@ -469,4 +470,5 @@ function reverseItem(w) {
 }
 
 initResults({ state, go, showError, h, icon });
+initRemedy({ state, go, showError, h, icon });
 go(0);

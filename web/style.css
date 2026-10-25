@@ -307,3 +307,41 @@ h3.target { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spac
 .sev.high { color: var(--bad); }
 .sev.medium { color: var(--warn); }
 .sev.low { color: var(--info); }
+
+/* ---------- Langkah 6–7: solusi dan laporan ---------- */
+.sol button.hd { width: 100%; min-height: 44px; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+.sol .hd .grow { flex: 1; min-width: 0; }
+.sol .hd .ic:last-child { transition: transform .2s var(--ease-out); flex: 0 0 auto; }
+.sol.open .hd .ic:last-child { transform: rotate(180deg); }
+.block { display: block; }
+.compare .card.picked { border-color: var(--ok); }
+.compare .card { display: grid; gap: var(--space-xs); align-content: start; }
+.compare .card .btn { justify-self: start; margin-top: var(--space-xs); }
+.compare .yes { color: var(--ok); }
+.compare .small .ic, td .ic { vertical-align: -3px; margin-right: var(--space-xs); }
+.xlist { border-top: 1px solid var(--line); }
+.xrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-xs) var(--space-md); padding: var(--space-xs) 0; border-bottom: 1px solid var(--line); }
+.xrow label { display: flex; align-items: center; gap: var(--space-sm); min-height: 44px; cursor: pointer; flex: 1 1 220px; }
+.xrow input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--brand); flex: 0 0 auto; }
+.xrow .inp { flex: 0 1 260px; }
+.report p { margin: 0 0 1em; }
+.report p:last-child { margin-bottom: 0; }
+table.apa { border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); background: none; font-family: var(--font-report); font-size: 16px; }
+table.apa caption { caption-side: top; text-align: left; font-style: italic; padding-bottom: var(--space-sm); }
+table.apa th { background: none; color: var(--ink); font-size: 16px; font-weight: 400; border-bottom: 1px solid var(--ink); }
+table.apa td { border-bottom: 0; }
+.apa-box { overflow-x: auto; margin-bottom: var(--space-md); }
+
+@media print {
+  header.site, .skip, footer.site, .nav, .actions, .page-error, .loadbar { display: none !important; }
+  body { background: var(--surface); }
+  .report { border: 0; padding: 0; }
+  .page:not(.on) { display: none !important; }
+  .apa-box, .report p { break-inside: avoid; }
+}
+@media (max-width: 480px) {
+  .sol button.hd { flex-wrap: wrap; }
+  .sol .hd .grow { flex-basis: calc(100% - 96px); }
+  .sol .hd .ic:last-child { order: 2; }
+  .sol .hd .pill { order: 3; margin-left: 42px; }
+}

@@ -2,7 +2,7 @@
 // Data pengguna hanya ditulis ke filesystem virtual Pyodide di memori browser, tidak dikirim ke mana pun.
 
 const PY_FILES = ["__init__.py", "io.py", "prep.py", "target.py", "normality.py", "diagnose.py", "remedies.py", "report.py", "api.py"];
-const API_NAMES = ["load_table", "set_cell", "prepare", "check", "remedy", "report"];
+const API_NAMES = ["load_table", "set_cell", "prepare", "check", "remedy", "report", "export_scores"];
 const PKG_DIR = "/home/pyodide/cekdata";
 const LOAD_FAILED = "Mesin statistik gagal dimuat. Periksa koneksi internetmu, lalu muat ulang halaman.";
 

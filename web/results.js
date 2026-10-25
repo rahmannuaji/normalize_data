@@ -14,7 +14,7 @@ const GOALS = [
 ];
 const GOAL_NAME = { correlation: "Korelasi", regression: "Regresi", ttest_ind: "Uji-t independen", ttest_paired: "Uji-t berpasangan", anova: "ANOVA satu arah", normality_only: "Cek normalitas" };
 
-const STATUS = {
+export const STATUS = {
   bad: ["circle-x", "Tidak normal"],
   warn: ["triangle-alert", "Sedikit menyimpang, masih aman"],
   ok: ["circle-check", "Normal"],
@@ -45,12 +45,12 @@ const RULE = {
 };
 
 // ---------- Format angka (koma desimal, minus ber-tanda −) ----------
-const fmt = (v, d = 2) => (v == null ? "–" : v.toFixed(d).replace(".", ",").replace("-", "−"));
-const fmtP = (p) => (p < 0.001 ? "< 0,001" : fmt(p, 3));
-const trim = (v) => (typeof v === "number" ? String(Math.round(v * 1000) / 1000).replace(".", ",").replace("-", "−") : v == null ? "–" : String(v));
+export const fmt = (v, d = 2) => (v == null ? "–" : v.toFixed(d).replace(".", ",").replace("-", "−"));
+export const fmtP = (p) => (p < 0.001 ? "< 0,001" : fmt(p, 3));
+export const trim = (v) => (typeof v === "number" ? String(Math.round(v * 1000) / 1000).replace(".", ",").replace("-", "−") : v == null ? "–" : String(v));
 const MAX_ROWS = 30;
 
-function pill(kind, ic, text) {
+export function pill(kind, ic, text) {
   return h("span", { class: `pill ${kind}` }, icon(ic), text);
 }
 
