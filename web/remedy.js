@@ -1,7 +1,7 @@
 // Langkah 6–7: solusi berurutan (dengan label kejujuran) dan laporan siap tempel.
-import { call } from "./engine.js?v=4";
-import { histogram } from "./charts.js?v=4";
-import { fmt, fmtP, trim, pill, STATUS } from "./results.js?v=4";
+import { call } from "./engine.js?v=5";
+import { histogram } from "./charts.js?v=5";
+import { fmt, fmtP, trim, pill, STATUS } from "./results.js?v=5";
 
 let state, go, showError, h, icon;
 
@@ -163,6 +163,7 @@ async function fillAlt(body) {
   altBox.append(note("info", "info", "Menghitung (bootstrap 5.000 sampel ulang bisa memakan beberapa detik)…"));
   try {
     R.alt = await call("remedy", { kind: "alternative" });
+    if (rem() !== R) return; // hasil uji sudah diganti selagi menghitung (halaman tetap bisa dipakai)
     renderAlt();
   } catch (err) {
     altBox.replaceChildren();

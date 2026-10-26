@@ -1,34 +1,57 @@
-// Mesin statistik: Pyodide + paket cekdata. Satu-satunya jembatan JS ↔ Python.
+// Mesin statistik: satu-satunya jembatan JS ↔ Python. Pyodide berjalan di Web Worker (engine-worker.js) supaya
+// halaman tetap responsif selama hitungan berat; API modul ini (ready, call, writeFile) tetap sama.
 // Data pengguna hanya ditulis ke filesystem virtual Pyodide di memori browser, tidak dikirim ke mana pun.
 
 // Naikkan VERSION setiap rilis (juga ?v= pada import dan index.html) agar browser tidak memakai cache lama.
-const VERSION = "4";
-const PY_FILES = ["__init__.py", "io.py", "prep.py", "target.py", "normality.py", "diagnose.py", "remedies.py", "report.py", "api.py"];
+const VERSION = "5";
 const API_NAMES = ["load_table", "set_cell", "prepare", "check", "remedy", "report", "export_scores"];
-const PKG_DIR = "/home/pyodide/cekdata";
 const LOAD_FAILED = "Mesin statistik gagal dimuat. Periksa koneksi internetmu, lalu muat ulang halaman.";
+const CRASHED = "Terjadi kesalahan di mesin statistik. Coba muat ulang halaman.";
+const BUSY_DELAY = 300; // ms; indikator hanya untuk panggilan yang terasa lama, agar tidak berkedip saat mengetik
 
-let pyodide;
-let dispatch; // (name, json) => json, dibuat sekali agar tidak membuat PyProxy baru tiap panggilan
+const worker = new Worker(`engine-worker.js?v=${VERSION}`);
+const pending = new Map();
+let seq = 0;
+let settle;
+const loading = new Promise((resolve, reject) => (settle = { resolve, reject }));
 
-const loading = (async () => {
-  try {
-    pyodide = await loadPyodide();
-    await pyodide.loadPackage(["numpy", "pandas", "scipy", "statsmodels", "micropip"]);
-    // openpyxl tidak ada di distribusi Pyodide 0.27.7, jadi dipasang dari PyPI bersama xlrd (murni Python).
-    await pyodide.pyimport("micropip").install(["openpyxl==3.1.5", "xlrd==2.0.1"]);
-    pyodide.FS.mkdirTree(PKG_DIR);
-    await Promise.all(PY_FILES.map(async (f) => {
-      const res = await fetch(`py/cekdata/${f}?v=${VERSION}`);
-      if (!res.ok) throw new Error(`py/cekdata/${f}: HTTP ${res.status}`);
-      pyodide.FS.writeFile(`${PKG_DIR}/${f}`, await res.text());
-    }));
-    dispatch = pyodide.runPython("import cekdata.api as _api\nlambda name, payload: getattr(_api, name)(payload)");
-  } catch (e) {
-    console.error(e);
-    throw new Error(LOAD_FAILED);
+// Event "engine-busy" (detail: true/false) untuk indikator "Menghitung…" di app.js.
+let active = 0;
+let busyTimer = 0;
+function busy(delta) {
+  active += delta;
+  clearTimeout(busyTimer);
+  busyTimer = setTimeout(() => document.dispatchEvent(new CustomEvent("engine-busy", { detail: active > 0 })), active ? BUSY_DELAY : 0);
+}
+
+worker.onmessage = ({ data }) => {
+  if (data.id === 0) {
+    if (!data.fail) return settle.resolve();
+    console.error(data.fail);
+    return settle.reject(new Error(LOAD_FAILED));
   }
-})();
+  const p = pending.get(data.id);
+  pending.delete(data.id);
+  busy(-1);
+  if (data.fail) p.reject(data.fail);
+  else p.resolve(data);
+};
+worker.onerror = (e) => {
+  console.error(e.message);
+  settle.reject(new Error(LOAD_FAILED));
+  for (const p of pending.values()) p.reject(e.message);
+  pending.clear();
+  busy(-active);
+};
+
+function send(msg) {
+  return new Promise((resolve, reject) => {
+    const id = ++seq;
+    pending.set(id, { resolve, reject });
+    busy(1);
+    worker.postMessage({ id, ...msg });
+  });
+}
 
 export function ready() {
   return loading;
@@ -39,10 +62,10 @@ export async function call(name, args = {}) {
   if (!API_NAMES.includes(name)) throw new Error(`Fungsi "${name}" tidak dikenal.`);
   let out;
   try {
-    out = JSON.parse(dispatch(name, JSON.stringify(args)));
+    out = JSON.parse((await send({ op: "call", name, payload: JSON.stringify(args) })).out);
   } catch (e) {
     console.error(e);
-    throw new Error("Terjadi kesalahan di mesin statistik. Coba muat ulang halaman.");
+    throw new Error(CRASHED);
   }
   if (out && out.error) {
     if (out.detail) console.error(out.detail); // rincian teknis hanya untuk konsol, tidak ditampilkan ke pengguna
@@ -54,6 +77,11 @@ export async function call(name, args = {}) {
 export async function writeFile(name, bytes) {
   await loading;
   const path = `/tmp/${String(name).replace(/[\\/]/g, "_")}`;
-  pyodide.FS.writeFile(path, bytes);
+  try {
+    await send({ op: "write", path, bytes });
+  } catch (e) {
+    console.error(e);
+    throw new Error(CRASHED);
+  }
   return path;
 }

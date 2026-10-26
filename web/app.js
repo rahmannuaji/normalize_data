@@ -1,7 +1,7 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
-import { ready, call, writeFile } from "./engine.js?v=4";
-import { initResults } from "./results.js?v=4";
-import { initRemedy } from "./remedy.js?v=4";
+import { ready, call, writeFile } from "./engine.js?v=5";
+import { initResults } from "./results.js?v=5";
+import { initRemedy } from "./remedy.js?v=5";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 
@@ -104,6 +104,14 @@ ready().then(
     bar.querySelector("span").textContent = err.message;
   },
 );
+
+// Saat mesin menghitung lebih dari sesaat, bilah di header menampilkan "Menghitung…" (event dari engine.js).
+document.addEventListener("engine-busy", (e) => {
+  const bar = document.getElementById("loadbar");
+  if (bar.classList.contains("bad")) return;
+  document.getElementById("loadText").textContent = "Menghitung…";
+  bar.hidden = !e.detail;
+});
 
 if (AUTHOR) {
   document.getElementById("author").textContent = AUTHOR;
@@ -236,6 +244,7 @@ function renderPreview() {
 // Ketik sendiri
 const manual = { ny: 1, nx: 2, rows: 20, data: [] };
 const manualTable = h("div", { class: "tablewrap" });
+const pasteNote = h("div", { "aria-live": "polite" });
 const manualSel = (id, label, from, to, key) => {
   const s = h("select", { class: "inp", id, onchange: () => { manual[key] = Number(s.value); renderManual(); } }, Array.from({ length: to - from + 1 }, (_, i) => h("option", { value: from + i, selected: from + i === manual[key] }, from + i)));
   return h("div", { class: "field" }, h("label", { for: id }, label), s);
@@ -263,6 +272,14 @@ manualTable.addEventListener("paste", (e) => {
   const lines = e.clipboardData.getData("text/plain").replace(/\r/g, "").replace(/\n$/, "").split("\n").map((l) => l.split("\t"));
   const r0 = Number(td.dataset.r);
   const c0 = Number(td.dataset.c);
+  // Yang tidak muat di tabel (lebih dari 1000 baris atau di kanan kolom terakhir) tidak dipakai; beri tahu pengguna.
+  const nCols = manualHeaders().length - c0;
+  const filled = (cells) => cells.some((v) => v.trim());
+  const cut = [
+    filled(lines.slice(1000 - r0).flat()) ? "1000 baris pertama" : null,
+    lines.some((l) => filled(l.slice(nCols))) ? `${nCols} kolom pertama` : null,
+  ].filter(Boolean);
+  pasteNote.replaceChildren(...(cut.length ? [note("warn", "triangle-alert", `Hanya ${cut.join(" dan ")} yang dipakai; untuk data lebih besar pakai upload.`)] : []));
   manual.rows = Math.min(1000, Math.max(manual.rows, r0 + lines.length));
   manual.data = Array.from({ length: manual.rows }, (_, r) => manual.data[r] ?? []);
   lines.forEach((cells, i) => cells.forEach((v, j) => {
@@ -289,6 +306,7 @@ async function submitManual() {
 panels.ketik.append(h("div", { class: "card" },
   h("div", { class: "grid g3" }, manualSel("mY", "Jumlah variabel Y", 1, 3, "ny"), manualSel("mX", "Jumlah variabel X", 0, 10, "nx"), h("div", { class: "field" }, h("label", { for: "mRows" }, "Jumlah responden (baris)"), rowsInput)),
   h("div", { style: "margin-top:var(--space-md)" }, manualTable),
+  pasteNote,
   h("p", { class: "caption" }, "Bisa langsung Ctrl+V dari Excel: tempel di sel mana pun, isinya menyebar ke kolom dan baris di sebelahnya."),
   useManual));
 renderManual();
@@ -445,6 +463,7 @@ async function runPrepare() {
   const vars = specs();
   if (!vars.length) {
     state.prep = null;
+    state.check = null; // semua kolom dihapus: hasil uji lama tidak berlaku lagi
     prepBox.replaceChildren(note("info", "info", "Pilih kolom untuk minimal satu variabel, nanti kami cek isinya di sini."));
     return;
   }
