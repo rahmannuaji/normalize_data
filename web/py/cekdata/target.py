@@ -17,10 +17,11 @@ def _and(names):
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " dan " + names[-1]
 
 
-def _t(label, subject, kind, values, idx, groups_n=None, y=None, model=None):
+def _t(label, subject, kind, values, idx, groups_n=None, y=None, model=None, y_values=None):
     """label: judul singkat di UI; subject: frasa untuk kalimat laporan ("Uji normalitas dilakukan terhadap …")."""
     return {"label": label, "subject": subject, "kind": kind, "values": np.asarray(values, dtype=float),
-            "rows": [int(i) + 1 for i in idx], "groups_n": groups_n, "y": y, "model": model}
+            "rows": [int(i) + 1 for i in idx], "groups_n": groups_n, "y": y, "model": model,
+            "y_values": None if y_values is None else np.asarray(y_values, dtype=float)}
 
 
 def _regression(scores, y, xs):
@@ -34,7 +35,7 @@ def _regression(scores, y, xs):
         mahal_p = stats.chi2.sf(d2, len(xs))
     model = {"std_resid": np.asarray(infl.resid_studentized_internal), "cooks": np.asarray(infl.cooks_distance[0]),
              "mahal_p": mahal_p, "fitted": np.asarray(fit.fittedvalues)}
-    return _t(f"Residual regresi: {', '.join(xs)} → {y}", f"residual model regresi {_and(xs)} terhadap {y}", "residual", fit.resid, scores.index, y=y, model=model)
+    return _t(f"Residual regresi: {', '.join(xs)} → {y}", f"residual model regresi {_and(xs)} terhadap {y}", "residual", fit.resid, scores.index, y=y, model=model, y_values=scores[y])
 
 
 def _anova_resid(scores, y):
@@ -74,4 +75,4 @@ def build_targets(scores, variables, goal):
         raise GoalError(f"ANOVA butuh kolom kelompok dengan minimal 3 kelompok (sekarang {k}).")
     n = [int((g == lv).sum()) for lv in levels]
     return [_t(f"Residual ANOVA: {y} ~ kelompok", f"residual model ANOVA satu arah {y} berdasarkan kelompok", "residual", _anova_resid(scores, y),
-               scores.index, n, y) for y in ys]
+               scores.index, n, y, y_values=scores[y]) for y in ys]

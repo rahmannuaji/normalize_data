@@ -1,7 +1,7 @@
 // State UI dan navigasi langkah. Isi langkah 1–7 dirender ke #step1..#step7 (Task 10–12).
-import { ready, call, writeFile } from "./engine.js?v=5";
-import { initResults } from "./results.js?v=5";
-import { initRemedy } from "./remedy.js?v=5";
+import { ready, call, writeFile } from "./engine.js?v=6";
+import { initResults } from "./results.js?v=6";
+import { initRemedy } from "./remedy.js?v=6";
 
 const AUTHOR = ""; // nama pembuat untuk footer; biarkan kosong sampai diberikan pemilik proyek
 

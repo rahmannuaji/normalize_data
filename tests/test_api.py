@@ -60,7 +60,7 @@ def test_scipy_errors_on_constant_data_do_not_leak(tmp_path):
     call("check", goal="anova", alpha=0.05)
     assert call("remedy", kind="transform", method="boxcox")["error"] == "Semua nilai sama, jadi data tidak bisa ditransformasi."
     r = call("remedy", kind="alternative")
-    assert r["error"] == api._GENERIC and "identical" in r["detail"]
+    assert r["error"].startswith("Semua nilai Y1 sama") and "detail" not in r
 
 def test_nan_becomes_null():
     assert json.loads(api._dumps({"a": float("nan"), "b": [float("inf")]})) == {"a": None, "b": [None]}
@@ -152,7 +152,7 @@ def test_ttest_ind_on_unfixed_example_lists_rows_per_group():
     r = call("check", goal="ttest_ind", alpha=0.05)
     assert "error" not in r
     hits = [t["label"] for t in r["targets"] if any(f["id"] == "data_error" for f in t["findings"])]
-    assert len(hits) == 1
+    assert hits == []  # S4 milik X1, X1 tidak dianalisis pada uji-t independen
 
 
 def test_verdict_override_flag():
@@ -183,7 +183,7 @@ def test_report_with_two_x_mentions_both_labels():
     call("prepare", variables=[Y, X, X2], group=None); call("check", goal="regression", alpha=0.05)
     call("remedy", kind="alternative")
     txt = call("report", chosen_id="bootstrap")["text"]
-    assert "X1 → Y1: B = " in txt and "X2 → Y1: B = " in txt
+    assert "X1 terhadap Y1: B = " in txt and "X2 terhadap Y1: B = " in txt
 
 
 def test_prepare_rejects_duplicate_empty_and_reserved_names():
@@ -201,4 +201,82 @@ def test_integer_valued_group_codes_read_as_integers(tmp_path):
     call("load_table", path=str(p))
     assert call("prepare", variables=[{**Y, "columns": ["Y"]}], group="G")["groups"] == {"1": 20, "2": 20}
     assert [t["label"] for t in call("check", goal="ttest_ind", alpha=0.05)["targets"]] == ["Y1 (kelompok 1)", "Y1 (kelompok 2)"]
-    assert call("remedy", kind="alternative")["parametric"][0]["label"] == "Y1: 1 vs 2"
+    assert call("remedy", kind="alternative")["parametric"][0]["label"] == "Y1 antara 1 dan 2"
+
+
+def _unreversed_setup(goal):
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    call("prepare", variables=[Y, X], group="JK")
+    return call("check", goal=goal, alpha=0.05)
+
+
+def test_correlation_findings_follow_their_own_variable():
+    r = {t["label"]: t for t in _unreversed_setup("correlation")["targets"]}
+    assert all(f["id"] != "data_error" for f in r["Y1"]["findings"])
+    assert all(f["id"] != "unreversed_item" for f in r["X1"]["findings"])
+    assert any(f["id"] == "data_error" for f in r["X1"]["findings"])
+    assert any(f["id"] == "unreversed_item" for f in r["Y1"]["findings"])
+
+
+def test_correlation_report_cause_for_y1_not_out_of_range():
+    _unreversed_setup("correlation")
+    txt = call("report")["text"]
+    y1 = next(p for p in txt.split("\n\n") if p.startswith("Uji normalitas") and "Y1" in p.split(",")[0])
+    assert "Penyebab utama" in y1 and "skor di luar rentang" not in y1
+
+
+def test_regression_residual_keeps_findings_of_y_and_x():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    call("prepare", variables=[Y, X], group=None)
+    fs = {f["id"] for f in call("check", goal="regression", alpha=0.05)["targets"][0]["findings"]}
+    assert {"data_error", "unreversed_item"} <= fs
+
+
+def test_ttest_ind_group_targets_of_y_skip_x_data_error():
+    ts = _unreversed_setup("ttest_ind")["targets"]
+    assert all(f["id"] != "data_error" for t in ts for f in t["findings"])
+
+
+def _const_y(tmp_path, goal, **kw):
+    import numpy as np, pandas as pd
+    rng = np.random.default_rng(5)
+    p = tmp_path / "k.csv"
+    pd.DataFrame({"Y": [3] * 60, "A": rng.integers(1, 6, 60), "B": rng.integers(1, 6, 60), "G": [1, 2, 3] * 20}).to_csv(p, sep=";", index=False)
+    call("load_table", path=str(p))
+    vs = [{**Y, "columns": ["Y"]}, {**X, "columns": ["A"]}, {**X, "name": "X2", "columns": ["B"]}]
+    call("prepare", variables=vs, group="G")
+    return call("check", goal=goal, alpha=0.05)
+
+
+@pytest.mark.filterwarnings("ignore")
+@pytest.mark.parametrize("goal", ["regression", "anova"])
+def test_constant_y_is_skipped_not_judged(tmp_path, goal):
+    r = _const_y(tmp_path, goal)
+    assert [t["verdict"]["status"] for t in r["targets"]] == ["skipped"]
+    assert "penyimpangan" not in call("report")["text"]
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_constant_y_alternative_is_indonesian_user_error(tmp_path):
+    _const_y(tmp_path, "regression")
+    e = call("remedy", kind="alternative")
+    assert e["error"].startswith("Semua nilai Y1 sama") and "detail" not in e
+
+
+def test_diagnose_uses_unicode_minus():
+    from cekdata import diagnose as dg
+    assert dg._f(-0.5) == "−0,50"
+
+
+def test_chosen_labels_read_naturally():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet="")
+    call("prepare", variables=[Y, X], group="JK"); call("check", goal="regression", alpha=0.05)
+    assert "X1 terhadap Y1" in call("remedy", kind="alternative")["parametric"][0]["label"]
+    call("check", goal="ttest_ind", alpha=0.05)
+    assert call("remedy", kind="alternative")["parametric"][0]["label"] == "Y1 antara L dan P"
+
+
+def test_prepare_strips_names_for_scores():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    r = call("prepare", variables=[{**Y, "name": " Y1 "}, X], group=None)
+    assert "Y1" in r["preview"][0] and " Y1 " not in r["preview"][0]

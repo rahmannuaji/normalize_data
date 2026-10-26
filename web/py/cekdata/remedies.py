@@ -133,7 +133,7 @@ def _regr(scores, ys, xs):
         rob = model.fit(cov_type="HC3", use_t=True)
         bs = bootstrap_ols(d[y].to_numpy(), d[xs].to_numpy(), xs)
         for j, x in enumerate(xs):
-            lab = f"{x} → {y}"
+            lab = f"{x} terhadap {y}"
             beta = fit.params[x] * d[x].std() / d[y].std()
             par.append(_res("ols", "Regresi OLS", lab, "B", fit.params[x], fit.pvalues[x], fit.df_resid,
                             fit.conf_int().loc[x], beta, "β terstandar", t=float(fit.tvalues[x])))
@@ -154,7 +154,7 @@ def _ind(scores, ys, xs):
     par, alt = [], []
     for y in ys:
         lv, (a, b) = _groups(scores, y)
-        lab = f"{y}: {lv[0]} vs {lv[1]}"
+        lab = f"{y} antara {lv[0]} dan {lv[1]}"
         t = stats.ttest_ind(a, b, equal_var=False)
         ci = t.confidence_interval()
         sp = np.sqrt(((len(a) - 1) * a.var(ddof=1) + (len(b) - 1) * b.var(ddof=1)) / (len(a) + len(b) - 2))
@@ -185,7 +185,7 @@ def _anova(scores, ys, xs):
     par, alt, post = [], [], []
     for y in ys:
         lv, gs = _groups(scores, y)
-        lab = f"{y}: {', '.join(map(str, lv))}"
+        lab = f"{y} antar kelompok"
         allv = np.concatenate(gs)
         n, k = len(allv), len(gs)
         f = stats.f_oneway(*gs)
@@ -208,5 +208,8 @@ def alternative(scores, variables, goal):
         return {"parametric": [], "alternatives": [], "posthoc": None}
     ys = [v["name"] for v in variables if v["role"] == "Y"]
     xs = [v["name"] for v in variables if v["role"] == "X"]
+    for y in ys:
+        if np.ptp(scores[y].astype(float)) == 0:
+            raise UserError(f"Semua nilai {y} sama, jadi analisis alternatif tidak bisa dijalankan.")
     par, alt, post = _RUN[goal](scores, ys, xs)
     return {"parametric": par, "alternatives": alt, "posthoc": post}

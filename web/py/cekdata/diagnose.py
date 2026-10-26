@@ -4,7 +4,7 @@ _ORDER = {"high": 0, "medium": 1, "low": 2}
 
 
 def _f(v, d=2):
-    return f"{v:.{d}f}".replace(".", ",")
+    return f"{v:.{d}f}".replace(".", ",").replace("-", "−")
 
 
 def _rows(target, mask):

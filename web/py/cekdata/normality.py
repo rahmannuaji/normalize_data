@@ -114,7 +114,10 @@ def check_target(target, goal, alpha=0.05):
     if n < 3:
         res["verdict"]["reason"] = "Data kurang dari 3."
         return res
-    if np.std(x) == 0:
+    yv = target.get("y_values")
+    ref = x if yv is None else np.asarray(yv, dtype=float)
+    # Y konstan menyisakan residual berupa derau floating-point, bukan data yang boleh dinilai
+    if np.ptp(ref) == 0 or np.std(x) <= 1e-10 * max(1.0, abs(ref.mean())):
         res["verdict"]["reason"] = "Semua nilai sama, normalitas tidak bisa diuji."
         return res
 

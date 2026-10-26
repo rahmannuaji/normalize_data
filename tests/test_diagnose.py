@@ -36,5 +36,5 @@ def test_tiny_n_and_extras():
     assert "low_variety" in ids(diagnose(tgt(x), moments(x), None, x, []))
     x = np.r_[np.zeros(80), np.full(20, 5.0)] + np.arange(100) * 1e-3
     f = diagnose(tgt(x), moments(x), None, x, [{"kind": "negative_item_total", "variable": "V", "item": "S2", "r": -0.4}])
-    assert f[0]["id"] == "unreversed_item" and "-0,4" in f[0]["detail"]
+    assert f[0]["id"] == "unreversed_item" and "−0,4" in f[0]["detail"]
     assert [d["severity"] for d in f] == sorted((d["severity"] for d in f), key=["high", "medium", "low"].index)

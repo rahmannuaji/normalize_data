@@ -82,6 +82,27 @@ def _set_transform(method):
     _S["transform"] = {n: remedies.transform(s[n], method)[1] for n in _transform_names()} if method else None
 
 
+def _target_vars(t):
+    """Nama variabel yang masuk ke target: variabel itu sendiri, Y (grup/ANOVA), dua Y (selisih), atau Y dan semua X (regresi)."""
+    ys = [v["name"] for v in _S["variables"] if v["role"] == "Y"]
+    if t["kind"] == "variable":
+        return {t["label"]}
+    if t["kind"] == "difference":
+        return set(ys[:2])
+    if t["model"]:
+        return {t["y"], *(v["name"] for v in _S["variables"] if v["role"] == "X")}
+    return {t["y"]}
+
+
+def _relevant(w, t, scores):
+    """Temuan persiapan hanya untuk target yang memuat variabel dan barisnya."""
+    names = _target_vars(t)
+    if "variable" in w:
+        return w["variable"] in names
+    cols = {c for v in _S["variables"] if v["name"] in names for c in v["columns"]}
+    return w["column"] in cols and ("row" not in w or w["row"] in t["rows"])
+
+
 def _checks(scores, transformed):
     out = []
     ranges = _S["info"]["score_range"]
@@ -91,7 +112,7 @@ def _checks(scores, transformed):
         y = t["y"] or t["label"]
         rng = None if transformed else ranges.get(y)
         yv = scores.loc[[r - 1 for r in t["rows"]], t["y"]].to_numpy() if t["kind"] == "residual" else t["values"]
-        mine = [w for w in warns if "row" not in w or w["row"] in t["rows"]]  # tiap target hanya memuat barisnya sendiri
+        mine = [w for w in warns if _relevant(w, t, scores)]
         c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, mine) if c["moments"] else []
         for f in c["findings"]:
             f["table"] = _row_table(t, scores, f["rows"]) if f["rows"] else None
@@ -160,6 +181,7 @@ def prepare(variables, group=None):
     _need()
     group = group or None
     names = [str(v.get("name") or "").strip() for v in variables]
+    variables = [{**v, "name": n} for v, n in zip(variables, names)]
     for n in names:
         if not n:
             raise UserError("Nama variabel tidak boleh kosong.")
