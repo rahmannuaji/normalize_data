@@ -280,3 +280,41 @@ def test_prepare_strips_names_for_scores():
     call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
     r = call("prepare", variables=[{**Y, "name": " Y1 "}, X], group=None)
     assert "Y1" in r["preview"][0] and " Y1 " not in r["preview"][0]
+
+
+def _paired(tmp_path, y1, y2, x=None):
+    import numpy as np, pandas as pd
+    rng = np.random.default_rng(2)
+    n = 40
+    p = tmp_path / "p.csv"
+    pd.DataFrame({"A": y1(rng, n), "B": y2(rng, n), "C": x(rng, n) if x else 1}).to_csv(p, sep=";", index=False)
+    call("load_table", path=str(p))
+    sc = [1, 5]
+    vs = [{**Y, "columns": ["A"], "scale": sc}, {**Y, "name": "Y2", "columns": ["B"], "scale": sc}, {**X, "columns": ["C"], "scale": sc}]
+    call("prepare", variables=vs, group=None)
+    return call("check", goal="ttest_paired", alpha=0.05)
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_paired_with_one_constant_y_runs_and_constant_difference_errors(tmp_path):
+    _paired(tmp_path, lambda r, n: [3] * n, lambda r, n: r.integers(1, 6, n))
+    assert "error" not in call("remedy", kind="alternative")
+    _paired(tmp_path, lambda r, n: [3] * n, lambda r, n: [4] * n)
+    e = call("remedy", kind="alternative")
+    assert e["error"].startswith("Selisih Y2") and "detail" not in e
+
+
+def test_difference_target_attributes_to_its_two_ys(tmp_path):
+    bad = lambda r, n: [9] + list(r.integers(1, 6, n - 1))
+    ok = lambda r, n: r.integers(1, 6, n)
+    ids = lambda t: {f["id"] for f in t["findings"]}
+    assert "data_error" in ids(_paired(tmp_path, bad, ok)["targets"][0])
+    assert "data_error" in ids(_paired(tmp_path, ok, bad)["targets"][0])
+    assert "data_error" not in ids(_paired(tmp_path, ok, ok, bad)["targets"][0])  # X1 tidak masuk selisih
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_constant_y_skip_reason_names_the_variable(tmp_path):
+    r = _const_y(tmp_path, "regression")
+    assert r["targets"][0]["verdict"]["reason"] == "Tidak dapat diuji karena semua nilai Y1 sama."
+    assert "tidak dapat diuji karena semua nilai Y1 sama." in call("report")["text"]

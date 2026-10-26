@@ -195,7 +195,7 @@ def _anova(scores, ys, xs):
         h = stats.kruskal(*gs)
         alt.append(_res("kruskal", "Kruskal-Wallis", lab, "H", h.statistic, h.pvalue, k - 1, None, h.statistic / (n - 1), "ε²"))
         d = scores[[y, "__group"]].dropna()
-        post += [{**r, "y": y, "label": f"{y}: {r['a']} vs {r['b']}"}
+        post += [{**r, "y": y, "label": f"{y} antara {r['a']} dan {r['b']}"}
                  for r in dunn(d[y].to_numpy(), d["__group"].to_numpy())]
     return par, alt, post
 
@@ -208,8 +208,12 @@ def alternative(scores, variables, goal):
         return {"parametric": [], "alternatives": [], "posthoc": None}
     ys = [v["name"] for v in variables if v["role"] == "Y"]
     xs = [v["name"] for v in variables if v["role"] == "X"]
-    for y in ys:
-        if np.ptp(scores[y].astype(float)) == 0:
-            raise UserError(f"Semua nilai {y} sama, jadi analisis alternatif tidak bisa dijalankan.")
+    if goal == "ttest_paired":
+        if np.ptp((scores[ys[1]] - scores[ys[0]]).astype(float)) == 0:
+            raise UserError(f"Selisih {ys[1]} − {ys[0]} sama untuk semua responden, jadi analisis alternatif tidak bisa dijalankan.")
+    else:
+        for y in ys:
+            if np.ptp(scores[y].astype(float)) == 0:
+                raise UserError(f"Semua nilai {y} sama, jadi analisis alternatif tidak bisa dijalankan.")
     par, alt, post = _RUN[goal](scores, ys, xs)
     return {"parametric": par, "alternatives": alt, "posthoc": post}

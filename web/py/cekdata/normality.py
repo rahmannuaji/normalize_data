@@ -117,7 +117,11 @@ def check_target(target, goal, alpha=0.05):
     yv = target.get("y_values")
     ref = x if yv is None else np.asarray(yv, dtype=float)
     # Y konstan menyisakan residual berupa derau floating-point, bukan data yang boleh dinilai
-    if np.ptp(ref) == 0 or np.std(x) <= 1e-10 * max(1.0, abs(ref.mean())):
+    if yv is not None and np.ptp(ref) == 0:
+        res["const_y"] = target["y"]
+        res["verdict"]["reason"] = f"Tidak dapat diuji karena semua nilai {target['y']} sama."
+        return res
+    if np.ptp(x) == 0 or (target.get("kind") in ("residual", "difference") and np.std(x) <= 1e-10 * max(1.0, abs(ref.mean()))):
         res["verdict"]["reason"] = "Semua nilai sama, normalitas tidak bisa diuji."
         return res
 

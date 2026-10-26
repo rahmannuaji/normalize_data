@@ -4,6 +4,7 @@ from cekdata.normality import moments, run_tests, decide_status, check_target
 
 Q40 = (np.arange(1, 41) - 0.5) / 40
 
+@pytest.mark.filterwarnings("ignore:`kurtosistest`:UserWarning")
 def test_shapiro_matches_r_reference():
     # R: shapiro.test(58:72) -> W = 0.96359, p-value = 0.7545
     t = run_tests(np.arange(58, 73, dtype=float))[0]

@@ -3,7 +3,7 @@
 // Data pengguna hanya ditulis ke filesystem virtual Pyodide di memori browser, tidak dikirim ke mana pun.
 
 // Naikkan VERSION setiap rilis (juga ?v= pada import dan index.html) agar browser tidak memakai cache lama.
-const VERSION = "6";
+const VERSION = "7";
 const API_NAMES = ["load_table", "set_cell", "prepare", "check", "remedy", "report", "export_scores"];
 const LOAD_FAILED = "Mesin statistik gagal dimuat. Periksa koneksi internetmu, lalu muat ulang halaman.";
 const CRASHED = "Terjadi kesalahan di mesin statistik. Coba muat ulang halaman.";

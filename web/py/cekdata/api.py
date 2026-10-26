@@ -94,7 +94,7 @@ def _target_vars(t):
     return {t["y"]}
 
 
-def _relevant(w, t, scores):
+def _relevant(w, t):
     """Temuan persiapan hanya untuk target yang memuat variabel dan barisnya."""
     names = _target_vars(t)
     if "variable" in w:
@@ -112,7 +112,7 @@ def _checks(scores, transformed):
         y = t["y"] or t["label"]
         rng = None if transformed else ranges.get(y)
         yv = scores.loc[[r - 1 for r in t["rows"]], t["y"]].to_numpy() if t["kind"] == "residual" else t["values"]
-        mine = [w for w in warns if _relevant(w, t, scores)]
+        mine = [w for w in warns if _relevant(w, t)]
         c["findings"] = dg.diagnose(t, c["moments"] or {}, rng, yv, mine) if c["moments"] else []
         for f in c["findings"]:
             f["table"] = _row_table(t, scores, f["rows"]) if f["rows"] else None

@@ -84,7 +84,7 @@ def _verdict(c, goal):
 
 
 def _skipped(c, prefix):
-    why = "jumlah datanya kurang dari 3" if c["n"] < 3 else "semua nilainya sama"
+    why = "jumlah datanya kurang dari 3" if c["n"] < 3 else f"semua nilai {c['const_y']} sama" if c.get("const_y") else "semua nilainya sama"
     s = f"{prefix}normalitas {_subject(c)} (n = {c['n']}) tidak dapat diuji karena {why}."
     return s[:1].upper() + s[1:]
 
