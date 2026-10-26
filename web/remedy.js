@@ -303,7 +303,7 @@ function apaTables() {
       const stat = sk ? `${fmt(c.moments.skew)}; ${fmt(c.moments.kurt)}` : t.skipped_reason || t.stat == null ? "–" : fmt(t.stat, 3);
       return h("tr", {}, h("td", {}, t.name), h("td", {}, stat), h("td", {}, String(c.n)), h("td", {}, sk || t.skipped_reason || t.p == null ? "–" : fmtP(t.p)));
     });
-    return h("div", { class: "apa-box" }, h("table", { class: "apa" }, h("caption", {}, `Tabel ${i + 1}. Hasil uji normalitas ${c.label}`),
+    return h("div", { class: "apa-box" }, h("table", { class: "apa" }, h("caption", {}, `Tabel ${i + 1}. Hasil uji normalitas ${c.subject || c.label}`),
       h("thead", {}, h("tr", {}, ["Uji", "Statistik", "n", "p"].map((t) => h("th", {}, t)))), h("tbody", {}, rows)),
       h("p", { class: "caption" }, `Catatan. Taraf signifikansi α = ${fmt(state.checkAlpha)}.`));
   });
