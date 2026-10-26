@@ -41,8 +41,9 @@ def build_scores(df, variables, group=None):
             for c in v["reversed"]:
                 items[c] = lo + hi - items[c]
         if k >= 2:
+            total = items.sum(axis=1)  # dihitung sekali; total butir lain = total - butir itu (O(k·n), bukan O(k²·n))
             for c in cs:
-                r = items[c].corr(items.drop(columns=c).sum(axis=1))
+                r = items[c].corr(total - items[c])
                 if pd.notna(r) and r < 0:
                     warnings.append({"kind": "negative_item_total", "variable": v["name"], "item": c, "r": round(float(r), 2)})
         scores[v["name"]] = items.sum(axis=1) if v["combine"] == "sum" else items.mean(axis=1)

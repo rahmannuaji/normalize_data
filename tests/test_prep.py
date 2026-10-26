@@ -40,3 +40,10 @@ def test_group_mean_and_single_column():
                                      {"name": "X1", "role": "X", "columns": ["P1"], "combine": "sum", "reversed": [], "scale": None}], group="G")
     assert list(scores.columns) == ["Y1", "X1", "__group"]
     assert info["score_range"] == {"Y1": [1, 5], "X1": None}
+
+
+def test_item_total_correlation_excludes_the_item_itself():
+    df = items_df()
+    _, info = build_scores(df, [spec()])
+    r = next(w["r"] for w in info["warnings"] if w["kind"] == "negative_item_total" and w["item"] == "P3")
+    assert r == round(float(df["P3"].corr(df["P1"] + df["P2"])), 2)
