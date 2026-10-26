@@ -17,7 +17,7 @@ T_GROUP_GOALS = {"ttest_ind", "ttest_paired", "anova"}
 
 
 def _fmt(v):
-    return f"{v:.2f}".replace(".", ",")
+    return f"{v:.2f}".replace("-", "−").replace(".", ",")
 
 
 def _fmt_p(p):
@@ -43,7 +43,9 @@ def run_tests(x, alpha=0.05):
     m = moments(x) if n >= 4 else None
     calls = {
         "shapiro": lambda: stats.shapiro(x),
-        "lilliefors": lambda: lilliefors(x, dist="norm", pvalmethod="table"),
+        # "approx" (Dallal-Wilkinson untuk p < 0,1, seperti nortest::lillie.test di R): "table" memotong p kecil
+        # tepat di 0,001 sehingga akan terbaca "p = 0,001" padahal sebenarnya p < 0,001.
+        "lilliefors": lambda: lilliefors(x, dist="norm", pvalmethod="approx"),
         "ks_classic": lambda: stats.kstest(x, stats.norm(x.mean(), x.std(ddof=1)).cdf),
         "anderson": lambda: normal_ad(x),
         "jarque_bera": lambda: stats.jarque_bera(x),

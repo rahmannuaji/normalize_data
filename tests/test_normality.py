@@ -53,3 +53,14 @@ def test_note_for_n_above_5000():
     x = norm.ppf((np.arange(1, 5002) - 0.5) / 5001)
     r = check_target({"label": "Y1", "values": x, "rows": list(range(1, 5002)), "groups_n": None}, "normality_only")
     assert "p-value Shapiro-Wilk kurang akurat untuk n > 5000" in r["notes"]
+
+
+def test_lilliefors_small_p_is_not_clipped_at_0001():
+    # pvalmethod="table" memotong semua p kecil di batas tabel 0,001
+    t = next(t for t in run_tests(expon.ppf((np.arange(1, 201) - 0.5) / 200)) if t["id"] == "lilliefors")
+    assert 0 < t["p"] < 1e-6  # "table" memberi 0,000999… (batas tabel), bukan p sebenarnya
+
+
+def test_reason_uses_unicode_minus():
+    from cekdata.normality import _reason
+    assert "skewness −1,20" in _reason(">300", 0.2, {"skew": -1.2, "kurt": 0.5})
