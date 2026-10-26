@@ -8,6 +8,24 @@
         "value": "plus jakarta sans",
         "createdAt": "2026-10-25T11:28:48.800Z",
         "reason": "Claude: typeface buatan desainer Indonesia (Tokotype), dipilih untuk audiens mahasiswa Indonesia di mockup sekali pakai"
+      },
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          "web/index.html"
+        ],
+        "createdAt": "2026-10-25T15:43:08.669Z",
+        "reason": "Claude: indeterminate loading bar while Pyodide loads (content is changing), hidden when ready and disabled under prefers-reduced-motion"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "mockup/mockup.html"
+        ],
+        "createdAt": "2026-10-25T23:13:27.405Z",
+        "reason": "Claude: mockup/mockup.html is the archived throwaway mockup (critique reference); its Plus Jakarta Sans stack predates DESIGN.md and is not shipped"
       }
     ]
   }

@@ -25,6 +25,6 @@ STORY: mahasiswa memahami bahwa "tidak normal" bukan jalan buntu, percaya bahwa 
 
 FIRST VIEWPORT: di desktop, header (logo kiri, pil privasi kanan). Di bawahnya grid 1,2:1: kiri berisi H1 dua baris 44px (baris kedua indigo), satu paragraf, tombol utama "Mulai cek data" dan tombol sekunder "Coba pakai data contoh", serta mikrocopy "Gratis · Tanpa daftar · Semua dihitung di browsermu"; kanan berisi kartu histogram data contoh dengan kurva normal dan ekor kiri merah. Di mobile semuanya satu kolom dengan kartu grafik di bawah tombol.
 
-FORM: wizard bertahap mengikuti mockup yang dipatok pengguna (bukan hasil roll). seed: none (unavailable)
+FORM: wizard bertahap mengikuti mockup yang dipatok pengguna; roll dijalankan hanya untuk catatan dan tidak menggantikan arah yang dipatok. seed:3f8761cc11349534
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

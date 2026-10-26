@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26T00:00:00Z",
+  "title": "Design System: Normalin",
+  "extensions": {
+    "colorMeta": {
+      "indigo": { "role": "primary", "displayName": "Indigo", "canonical": "#3B5BDB", "tonalRamp": ["#1B2A6B", "#24398F", "#2F49B0", "#3B5BDB", "#6E86E8", "#A3B3F0", "#CDD6F8", "#E8EDFF"] },
+      "indigo-dark": { "role": "primary", "displayName": "Indigo Dark", "canonical": "#2F49B0", "tonalRamp": ["#141E4D", "#1B2A6B", "#24398F", "#2F49B0", "#3B5BDB", "#6E86E8", "#A3B3F0", "#E8EDFF"] },
+      "indigo-soft": { "role": "primary", "displayName": "Indigo Soft", "canonical": "#E8EDFF", "tonalRamp": ["#3B5BDB", "#6E86E8", "#A3B3F0", "#C4CEF8", "#D6DEFC", "#E8EDFF", "#F1F4FF", "#F8F9FF"] },
+      "background": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#F6F7FB", "tonalRamp": ["#1B2333", "#5D6779", "#9AA3B5", "#C9CFDC", "#E3E7EF", "#F3F5FA", "#F6F7FB", "#FFFFFF"] },
+      "surface": { "role": "neutral", "displayName": "White Surface", "canonical": "#FFFFFF", "tonalRamp": ["#1B2333", "#5D6779", "#9AA3B5", "#C9CFDC", "#E3E7EF", "#F3F5FA", "#F6F7FB", "#FFFFFF"] },
+      "surface-sunken": { "role": "neutral", "displayName": "Sunken Paper", "canonical": "#F3F5FA", "tonalRamp": ["#1B2333", "#5D6779", "#9AA3B5", "#C9CFDC", "#E3E7EF", "#F3F5FA", "#F6F7FB", "#FFFFFF"] },
+      "ink": { "role": "neutral", "displayName": "Night Ink", "canonical": "#1B2333", "tonalRamp": ["#0E1320", "#1B2333", "#343E52", "#5D6779", "#8590A3", "#AEB6C5", "#D0D5DF", "#E3E7EF"] },
+      "muted": { "role": "neutral", "displayName": "Slate Muted", "canonical": "#5D6779", "tonalRamp": ["#1B2333", "#3A4456", "#5D6779", "#7B8497", "#9AA3B5", "#B9C0CE", "#D3D8E2", "#E3E7EF"] },
+      "line": { "role": "neutral", "displayName": "Hairline", "canonical": "#E3E7EF", "tonalRamp": ["#5D6779", "#8590A3", "#AEB6C5", "#C9CFDC", "#D5DAE4", "#E3E7EF", "#EEF0F6", "#F6F7FB"] },
+      "ok": { "role": "status", "displayName": "Forest Ok", "canonical": "#22702F", "tonalRamp": ["#0F3A18", "#175223", "#22702F", "#3A9048", "#6BB377", "#9ACFA4", "#C5E6CC", "#E6F6EA"] },
+      "ok-soft": { "role": "status", "displayName": "Ok Soft", "canonical": "#E6F6EA", "tonalRamp": ["#22702F", "#3A9048", "#6BB377", "#9ACFA4", "#C5E6CC", "#E6F6EA", "#F0FAF2", "#F8FDF9"] },
+      "warn": { "role": "status", "displayName": "Amber Brown Warn", "canonical": "#8A5200", "tonalRamp": ["#4A2B00", "#6B4000", "#8A5200", "#B36E0A", "#D49A3F", "#E8BE7E", "#F6DDB0", "#FFF4DD"] },
+      "warn-soft": { "role": "status", "displayName": "Warn Soft", "canonical": "#FFF4DD", "tonalRamp": ["#8A5200", "#B36E0A", "#D49A3F", "#E8BE7E", "#F6DDB0", "#FFF4DD", "#FFF9EB", "#FFFCF5"] },
+      "bad": { "role": "status", "displayName": "Signal Red", "canonical": "#C92A2A", "tonalRamp": ["#5E1111", "#8A1B1B", "#C92A2A", "#DB5555", "#E88282", "#F2AEAE", "#F9D3D3", "#FDE8E8"] },
+      "bad-soft": { "role": "status", "displayName": "Bad Soft", "canonical": "#FDE8E8", "tonalRamp": ["#C92A2A", "#DB5555", "#E88282", "#F2AEAE", "#F9D3D3", "#FDE8E8", "#FEF1F1", "#FFF8F8"] },
+      "info": { "role": "status", "displayName": "Deep Info Blue", "canonical": "#24398F", "tonalRamp": ["#101B4A", "#1A2A6E", "#24398F", "#3B52AD", "#6679C6", "#97A5DB", "#C6CEEE", "#E8EDFF"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Home H1 only; 30px under 760px; second line in indigo." },
+      "headline": { "displayName": "Headline", "purpose": "Step titles; 22px under 760px." },
+      "title": { "displayName": "Title", "purpose": "Card, finding and feature headings." },
+      "body": { "displayName": "Body", "purpose": "Default text; lead paragraphs capped at 65ch." },
+      "small": { "displayName": "Small", "purpose": "Notes, table cells, option descriptions." },
+      "label": { "displayName": "Label", "purpose": "Steps, captions, chips, footer. Sentence case, no tracking." },
+      "report": { "displayName": "Report", "purpose": "Times New Roman, thesis-page preview and APA table only." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 3px color-mix(in srgb, #1B2333 10%, transparent)", "purpose": "Active tab in the segmented control; the only shadow in the system." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "Page enter (250ms, 6px rise), chevron rotation (200ms), loading bar (1.6s loop)." },
+      { "name": "duration-hover", "value": "150ms", "purpose": "Background, border and color transitions on buttons, steps, options, drop zone." },
+      { "name": "reduced-motion", "value": "animation: none; transition: none", "purpose": "prefers-reduced-motion: reduce disables all animation and transition." }
+    ],
+    "breakpoints": [
+      { "name": "narrow-phone", "value": "420px" },
+      { "name": "phone", "value": "480px" },
+      { "name": "tablet", "value": "760px" },
+      { "name": "container-max", "value": "1040px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action per screen, e.g. Mulai cek data.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Mulai cek data</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 18px; border:1px solid #E3E7EF; border-radius:10px; background:#FFFFFF; color:#1B2333; font:600 15px/1.2 'Plus Jakarta Sans', system-ui, sans-serif; cursor:pointer; transition:background-color .15s, border-color .15s, color .15s; } .ds-btn-primary { background:var(--brand,#3B5BDB); border-color:#3B5BDB; color:#FFFFFF; } .ds-btn-primary:hover, .ds-btn-primary:active { background:#2F49B0; border-color:#2F49B0; } .ds-btn:focus-visible { outline:2px solid #3B5BDB; outline-offset:2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Supporting action, e.g. Coba pakai data contoh.",
+      "html": "<button class=\"ds-btn-secondary\">Coba pakai data contoh</button>",
+      "css": ".ds-btn-secondary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 18px; border:1px solid #E3E7EF; border-radius:10px; background:#FFFFFF; color:#1B2333; font:600 15px/1.2 'Plus Jakarta Sans', system-ui, sans-serif; cursor:pointer; transition:background-color .15s, border-color .15s; } .ds-btn-secondary:hover { background:#F3F5FA; border-color:color-mix(in srgb, #3B5BDB 35%, #E3E7EF); } .ds-btn-secondary:focus-visible { outline:2px solid #3B5BDB; outline-offset:2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat white container with hairline border.",
+      "html": "<div class=\"ds-card\"><h3>Judul kartu</h3><p>Penjelasan singkat dalam bahasa kamu.</p></div>",
+      "css": ".ds-card { background:#FFFFFF; border:1px solid #E3E7EF; border-radius:14px; padding:24px; font-family:'Plus Jakarta Sans', system-ui, sans-serif; color:#1B2333; } .ds-card h3 { font-size:16px; font-weight:700; line-height:1.35; margin:0 0 8px; } .ds-card p { margin:0; color:#5D6779; font-size:14px; line-height:1.5; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "44px field with label above.",
+      "html": "<label class=\"ds-field\">Nama variabel<input class=\"ds-inp\" type=\"text\" value=\"Skor stres\"></label>",
+      "css": ".ds-field { display:grid; gap:4px; font:500 14px 'Plus Jakarta Sans', system-ui, sans-serif; color:#1B2333; } .ds-inp { width:100%; min-height:44px; padding:8px 12px; border:1px solid #E3E7EF; border-radius:10px; background:#FFFFFF; font:400 16px 'Plus Jakarta Sans', system-ui, sans-serif; color:#1B2333; } .ds-inp:hover { border-color:color-mix(in srgb, #3B5BDB 35%, #E3E7EF); } .ds-inp:focus-visible { outline:2px solid #3B5BDB; outline-offset:2px; }"
+    },
+    {
+      "name": "Stepper Step",
+      "kind": "nav",
+      "refersTo": "step-active",
+      "description": "Numbered wizard step in the sticky header; shown here active and done.",
+      "html": "<div class=\"ds-steps\"><button class=\"ds-step done\"><b>1</b>Data</button><button class=\"ds-step on\"><b>2</b>Tujuan</button><button class=\"ds-step\"><b>3</b>Hasil</button></div>",
+      "css": ".ds-steps { display:flex; gap:4px; font-family:'Plus Jakarta Sans', system-ui, sans-serif; } .ds-step { display:flex; align-items:center; gap:8px; min-height:44px; padding:6px 10px; border:0; border-radius:10px; background:none; color:#5D6779; font-size:13px; font-weight:500; cursor:pointer; transition:background-color .15s, color .15s; } .ds-step b { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:#E3E7EF; color:#5D6779; font-size:12px; } .ds-step:hover { background:#F3F5FA; color:#1B2333; } .ds-step.done b { background:#22702F; color:#FFFFFF; } .ds-step.on { background:#E8EDFF; color:#3B5BDB; font-weight:600; } .ds-step.on b { background:#3B5BDB; color:#FFFFFF; } .ds-step:focus-visible { outline:2px solid #3B5BDB; outline-offset:2px; }"
+    },
+    {
+      "name": "Option Card",
+      "kind": "card",
+      "refersTo": "option-selected",
+      "description": "Selectable choice with icon; selected state shown.",
+      "html": "<button class=\"ds-opt on\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v12\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/></svg><strong>Unggah file</strong><small>CSV atau Excel dari komputermu.</small></button>",
+      "css": ".ds-opt { display:block; width:100%; text-align:left; border:1.5px solid #E3E7EF; border-radius:14px; padding:16px; background:#FFFFFF; color:#1B2333; font:400 16px 'Plus Jakarta Sans', system-ui, sans-serif; cursor:pointer; transition:border-color .15s, background-color .15s; } .ds-opt svg { display:block; color:#3B5BDB; margin-bottom:8px; } .ds-opt small { display:block; color:#5D6779; margin-top:4px; font-size:14px; } .ds-opt:hover { border-color:color-mix(in srgb, #3B5BDB 40%, #E3E7EF); } .ds-opt.on { border-color:#3B5BDB; background:#E8EDFF; } .ds-opt:focus-visible { outline:2px solid #3B5BDB; outline-offset:2px; }"
+    },
+    {
+      "name": "Status Pills",
+      "kind": "chip",
+      "refersTo": "pill-ok",
+      "description": "Non-interactive status labels: soft background, dark text, icon, word.",
+      "html": "<span class=\"ds-pill ok\">Normal</span> <span class=\"ds-pill warn\">Sedikit menyimpang</span> <span class=\"ds-pill bad\">Tidak normal</span>",
+      "css": ".ds-pill { display:inline-flex; align-items:center; gap:4px; font:700 12px 'Plus Jakarta Sans', system-ui, sans-serif; padding:3px 9px; border-radius:9999px; } .ds-pill.ok { background:#E6F6EA; color:#22702F; } .ds-pill.warn { background:#FFF4DD; color:#8A5200; } .ds-pill.bad { background:#FDE8E8; color:#C92A2A; }"
+    },
+    {
+      "name": "Status Block",
+      "kind": "custom",
+      "refersTo": "pill-bad",
+      "description": "Result block: tinted border, bold headline, target line. Red variant shown.",
+      "html": "<div class=\"ds-status bad\"><p class=\"big\">Tidak normal</p><p class=\"target\">Skor stres, uji Shapiro-Wilk</p><a href=\"#\">Lihat penyebabnya</a></div>",
+      "css": ".ds-status { border-radius:14px; padding:18px; border:1px solid; font-family:'Plus Jakarta Sans', system-ui, sans-serif; } .ds-status.bad { background:#FDE8E8; border-color:color-mix(in srgb, #C92A2A 30%, #FFFFFF); color:#1B2333; } .ds-status .big { font-size:20px; font-weight:800; margin:0 0 4px; color:#C92A2A; } .ds-status .target { color:#5D6779; font-weight:600; margin:0 0 4px; } .ds-status a { color:#3B5BDB; }"
+    },
+    {
+      "name": "Info Note",
+      "kind": "custom",
+      "refersTo": "note-info",
+      "description": "Explanatory note on Indigo Soft.",
+      "html": "<div class=\"ds-note\">Tahukah kamu? Jika normal, titik Q-Q mengikuti garis.</div>",
+      "css": ".ds-note { padding:12px 14px; border-radius:10px; background:#E8EDFF; color:#24398F; font:400 14px 'Plus Jakarta Sans', system-ui, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Meja Konsultasi yang Tenang",
+    "overview": "Normalin is a quiet statistics consulting desk for undergraduates whose normality test came back \"not normal\". The shipped build is a restrained light-only product UI: a cool blue-grey page, white cards with hairline borders, and one indigo accent reserved for action, focus, links and the active step. Results read as a traceable diagnosis (status, cause, labelled remedy, copyable report), not a wall of SPSS output. The home screen is a short door into the tool (Operate mode), not a marketing page.\n\nDensity is moderate and steady: a single 1040px column, 16 to 24px gaps, 44px touch targets. The only place the system changes register is the report preview, which switches to Times New Roman on white so it looks like a thesis page and can be printed or pasted into a Chapter IV.",
+    "keyCharacteristics": [
+      "Restrained palette: neutral blue-tinted ground, one indigo accent, status colors used only for status.",
+      "Every status is text + soft background + Lucide icon, never color alone.",
+      "Flat, border-defined surfaces; shadow appears once (active tab).",
+      "Plus Jakarta Sans throughout, tabular numerals in tables; Times New Roman only inside the report.",
+      "Calm motion: 250ms fade and 6px rise on step change; everything switches off under reduced motion."
+    ],
+    "rules": [
+      { "name": "The One Indigo Rule", "body": "Indigo means \"you can act here or you are here\". It never marks status and never decorates.", "section": "colors" },
+      { "name": "The Status Triplet Rule", "body": "A status is always soft background + dark text color + icon + word. Color alone never carries meaning.", "section": "colors" },
+      { "name": "The Light Paper Rule", "body": "No dark mode, no gradients, no glass. Surfaces are white on a pale blue-grey ground.", "section": "colors" },
+      { "name": "The Tabular Rule", "body": "Tables use tabular-nums; statistics never sit in proportional digits.", "section": "typography" },
+      { "name": "The Thesis Page Rule", "body": "Serif appears only where the output imitates a thesis page.", "section": "typography" },
+      { "name": "The Flat Card Rule", "body": "Cards, notes and status blocks carry no shadow. Use a border and a tone change.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do take every color, radius, space and font from the `:root` tokens in `web/style.css`.",
+      "Do pair every status with its soft background, dark text color, Lucide icon and a word.",
+      "Do keep touch targets at 44px minimum, extending small controls with a pseudo-element.",
+      "Do keep indigo for actions, focus, links and the active step only.",
+      "Do write in Indonesian with \"kamu\", short and calm; explain statistical terms in plain words.",
+      "Do keep cards flat: 1px Line border, no shadow.",
+      "Do use tabular numerals for statistics and the serif face only inside the report.",
+      "Do honor `prefers-reduced-motion` for any new animation."
+    ],
+    "donts": [
+      "Don't use emoji, gradients, glass or dark surfaces.",
+      "Don't introduce a second accent hue or use status colors as decoration.",
+      "Don't distinguish states by color alone.",
+      "Don't add a shadow to resting cards or lift them on hover.",
+      "Don't use \"menormalkan data\" or promise normality; remedies are labelled with what they change in interpretation.",
+      "Don't use text smaller than 12px.",
+      "Not canonized (defects the build carries): a few one-off radii (12px tab track, 9px tab) and off-scale paddings are build residue, not rules for new surfaces."
+    ]
+  }
+}
