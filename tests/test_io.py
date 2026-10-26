@@ -62,8 +62,25 @@ def test_single_column_decimal_comma(tmp_path):
     df = _csv(tmp_path, "Y1\n1,5\n2,5\n")
     assert list(df.columns) == ["Y1"] and df["Y1"].tolist() == [1.5, 2.5]
 
-@pytest.mark.filterwarnings("ignore::pandas.errors.ParserWarning")
 def test_extra_fields_do_not_become_index(tmp_path):
     # Baris lebih panjang dari header: kolom kelebihan dibuang, nilai tidak bergeser jadi indeks.
     df = _csv(tmp_path, "A,B\n1,2,3\n4,5,6\n")
     assert df["A"].tolist() == [1, 4] and df["B"].tolist() == [2, 5]
+
+
+def test_extra_fields_are_warned_not_silent(tmp_path):
+    p = tmp_path / "d.csv"
+    p.write_text("A;B\n" + "".join(f"{i};{i};9\n" for i in range(8)) + "1;2\n", encoding="utf-8")
+    assert read_table(str(p))[1]["warnings"] == [
+        "Baris 1, 2, 3, 4, 5 dan 3 lainnya punya lebih banyak kolom daripada judul kolom; kolom tambahan diabaikan."]
+    p.write_text("A;B\n1;2;9\n3;4\n", encoding="utf-8")
+    assert read_table(str(p))[1]["warnings"] == ["Baris 1 punya lebih banyak kolom daripada judul kolom; kolom tambahan diabaikan."]
+
+
+def test_ragged_rows_raise_indonesian_user_error(tmp_path):
+    from cekdata import UserError
+    p = tmp_path / "d.csv"
+    p.write_text("A;B\n1;2\n3;4;5\n", encoding="utf-8")
+    with pytest.raises(UserError) as e:
+        read_table(str(p))
+    assert str(e.value) == "Format CSV tidak konsisten di baris 2. Periksa pemisah kolom (; atau ,)."

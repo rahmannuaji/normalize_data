@@ -2,6 +2,8 @@ import numpy as np
 import statsmodels.api as sm
 from scipy import stats
 
+from . import UserError
+
 REASONS = {"salah_input": "Salah input", "menjawab_asal": "Responden menjawab asal",
            "di_luar_populasi": "Di luar populasi penelitian"}
 
@@ -58,6 +60,8 @@ def dunn(values, groups):
 
 def transform(x, method):
     x = np.asarray(x, float)
+    if np.ptp(x) == 0:
+        raise UserError("Semua nilai sama, jadi data tidak bisa ditransformasi.")
     shift, reflected, lam = 0.0, False, None
     if method == "yeojohnson":
         t, lam = stats.yeojohnson(x)
@@ -78,7 +82,7 @@ def transform(x, method):
         else:
             t, lam = stats.boxcox(x)
     else:
-        raise ValueError(f"Metode transformasi tidak dikenal: {method}.")
+        raise UserError(f"Metode transformasi tidak dikenal: {method}.")
     return np.asarray(t).tolist(), {"method": method, "lambda": None if lam is None else float(lam),
                                     "shift": float(shift), "reflected": reflected}
 
@@ -86,9 +90,9 @@ def transform(x, method):
 def exclude_rows(scores, reasons):
     for row, r in reasons.items():
         if r not in REASONS:
-            raise ValueError("Setiap baris yang dikeluarkan wajib punya alasan.")
+            raise UserError("Setiap baris yang dikeluarkan wajib punya alasan.")
         if row - 1 not in scores.index:
-            raise ValueError(f"Baris {row} tidak ada.")
+            raise UserError(f"Baris {row} tidak ada.")
     return scores.drop(index=[r - 1 for r in reasons])
 
 

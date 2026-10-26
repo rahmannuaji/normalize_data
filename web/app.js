@@ -410,12 +410,27 @@ function chip(v, c, key) {
   return el;
 }
 
+// Nama yang dikirim ke engine: nama kosong diganti Y1, Y2, X1, … yang belum dipakai variabel lain.
+function specNames() {
+  const used = new Set(state.variables.map((v) => v.name.trim()).filter(Boolean));
+  return new Map(state.variables.map((v) => {
+    let n = v.name.trim();
+    if (!n) {
+      let i = 1;
+      while (used.has(v.role + i)) i++;
+      used.add((n = v.role + i));
+    }
+    return [v, n];
+  }));
+}
+
 // Spesifikasi untuk engine: hanya variabel yang sudah punya kolom.
 function specs() {
+  const names = specNames();
   return state.variables.filter((v) => v.columns.length).map((v) => {
     const a = parseFloat(v.ui.smin);
     const b = parseFloat(v.ui.smax);
-    return { name: v.name.trim() || v.role, role: v.role, columns: [...v.columns], combine: v.ui.mode === "items" ? v.combine : "sum", reversed: v.ui.mode === "items" ? v.reversed.filter((c) => v.columns.includes(c)) : [], scale: Number.isFinite(a) && Number.isFinite(b) && a < b ? [a, b] : null };
+    return { name: names.get(v), role: v.role, columns: [...v.columns], combine: v.ui.mode === "items" ? v.combine : "sum", reversed: v.ui.mode === "items" ? v.reversed.filter((c) => v.columns.includes(c)) : [], scale: Number.isFinite(a) && Number.isFinite(b) && a < b ? [a, b] : null };
   });
 }
 
@@ -481,7 +496,8 @@ function renderPrep(p) {
 }
 
 function reverseItem(w) {
-  const v = state.variables.find((x) => (x.name.trim() || x.role) === w.variable);
+  const names = specNames();
+  const v = state.variables.find((x) => names.get(x) === w.variable);
   if (!v) return;
   if (!v.reversed.includes(w.item)) v.reversed.push(w.item);
   renderStep2();

@@ -1,3 +1,4 @@
+import pytest
 import json
 from cekdata import api
 call = lambda f, **kw: json.loads(getattr(api, f)(json.dumps(kw)))
@@ -45,7 +46,21 @@ def test_errors_are_indonesian_json():
     assert call("prepare", variables=[{**Y, "columns": ["ZZ"]}], group=None)["error"] == 'Kolom "ZZ" tidak ditemukan.'
     assert call("set_cell", row=1, column="ZZ", value=1)["error"] == 'Kolom "ZZ" tidak ditemukan.'
     assert call("set_cell", row=999, column="S1", value=1)["error"] == "Baris 999 tidak ada di data."
-    assert call("set_cell", row="a", column="S1", value=1)["error"].startswith("Terjadi kesalahan tak terduga: TypeError")
+    r = call("set_cell", row="a", column="S1", value=1)
+    assert r["error"] == api._GENERIC and "TypeError" in r["detail"]  # pesan teknis hanya di detail (konsol)
+
+
+@pytest.mark.filterwarnings("ignore")
+def test_scipy_errors_on_constant_data_do_not_leak(tmp_path):
+    import pandas as pd
+    p = tmp_path / "c.csv"
+    pd.DataFrame({"Y": [3] * 40, "G": [1, 2, 3, 4] * 10}).to_csv(p, sep=";", index=False)
+    call("load_table", path=str(p))
+    call("prepare", variables=[{**Y, "columns": ["Y"]}], group="G")
+    call("check", goal="anova", alpha=0.05)
+    assert call("remedy", kind="transform", method="boxcox")["error"] == "Semua nilai sama, jadi data tidak bisa ditransformasi."
+    r = call("remedy", kind="alternative")
+    assert r["error"] == api._GENERIC and "identical" in r["detail"]
 
 def test_nan_becomes_null():
     assert json.loads(api._dumps({"a": float("nan"), "b": [float("inf")]})) == {"a": None, "b": [None]}
@@ -169,3 +184,21 @@ def test_report_with_two_x_mentions_both_labels():
     call("remedy", kind="alternative")
     txt = call("report", chosen_id="bootstrap")["text"]
     assert "X1 → Y1: statistik" in txt and "X2 → Y1: statistik" in txt
+
+
+def test_prepare_rejects_duplicate_empty_and_reserved_names():
+    call("load_table", path="web/contoh/kuesioner_psikologi.csv", sheet=None)
+    assert call("prepare", variables=[Y, {**X, "name": "Y1"}], group=None)["error"] == 'Nama variabel "Y1" dipakai lebih dari sekali.'
+    assert call("prepare", variables=[Y, {**X, "name": "  "}], group=None)["error"] == "Nama variabel tidak boleh kosong."
+    assert "__group" in call("prepare", variables=[Y, {**X, "name": "__group"}], group="JK")["error"]
+
+
+def test_integer_valued_group_codes_read_as_integers(tmp_path):
+    import numpy as np, pandas as pd
+    rng = np.random.default_rng(1)
+    p = tmp_path / "g.csv"
+    pd.DataFrame({"Y": rng.normal(size=41), "G": [1, 2] * 20 + [None]}).to_csv(p, sep=";", index=False)  # sel kosong -> kolom float
+    call("load_table", path=str(p))
+    assert call("prepare", variables=[{**Y, "columns": ["Y"]}], group="G")["groups"] == {"1": 20, "2": 20}
+    assert [t["label"] for t in call("check", goal="ttest_ind", alpha=0.05)["targets"]] == ["Y1 (kelompok 1)", "Y1 (kelompok 2)"]
+    assert call("remedy", kind="alternative")["parametric"][0]["label"] == "Y1: 1 vs 2"

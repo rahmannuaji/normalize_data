@@ -4,10 +4,12 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from scipy import stats
 
+from . import UserError
+
 GOALS = ("correlation", "regression", "ttest_ind", "ttest_paired", "anova", "normality_only")
 
 
-class GoalError(ValueError):
+class GoalError(UserError):
     pass
 
 
@@ -38,6 +40,8 @@ def _anova_resid(scores, y):
 def build_targets(scores, variables, goal):
     ys = [v["name"] for v in variables if v["role"] == "Y"]
     xs = [v["name"] for v in variables if v["role"] == "X"]
+    if goal == "correlation" and not (ys and xs):
+        raise GoalError("Korelasi butuh minimal satu Y dan satu X.")
     if goal in ("correlation", "normality_only"):
         return [_t(c, "variable", scores[c], scores.index) for c in (v["name"] for v in variables)]
     if goal == "regression":

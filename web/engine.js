@@ -44,7 +44,10 @@ export async function call(name, args = {}) {
     console.error(e);
     throw new Error("Terjadi kesalahan di mesin statistik. Coba muat ulang halaman.");
   }
-  if (out && out.error) throw new Error(out.error);
+  if (out && out.error) {
+    if (out.detail) console.error(out.detail); // rincian teknis hanya untuk konsol, tidak ditampilkan ke pengguna
+    throw new Error(out.error);
+  }
   return out;
 }
 

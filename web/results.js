@@ -71,7 +71,7 @@ function goalAvailability() {
   const noGroup = "Butuh kolom kelompok. Pilih di langkah 2.";
   const none = !state.prep ? "Atur variabel dulu di langkah 2." : null;
   return {
-    correlation: none || (vars.length < 2 ? "Butuh minimal 2 variabel." : null),
+    correlation: none || (!nY || !nX ? "Korelasi butuh minimal satu Y dan satu X." : null),
     regression: none || (!nY || !nX ? "Butuh minimal satu variabel Y dan satu X." : null),
     ttest_ind: none || (!groups ? noGroup : groups !== 2 ? `Butuh tepat 2 kelompok (kolom ${gname} punya ${groups}).` : null),
     ttest_paired: none || (nY < 2 ? "Butuh 2 variabel Y: sebelum dan sesudah." : null),

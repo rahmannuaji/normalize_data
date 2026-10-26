@@ -3,15 +3,17 @@ import datetime
 import functools
 import json
 import math
+import traceback
 
 import numpy as np
 import pandas as pd
 
-from . import diagnose as dg, io, normality, prep, remedies, report as rp, target as tg
+from . import UserError, diagnose as dg, io, normality, prep, remedies, report as rp, target as tg
 
 _S = {}
 _NOT_LOADED = "Data belum dimuat. Masukkan data di langkah 1."
 _BLANK = "kosong"
+_GENERIC = "Terjadi kesalahan saat mengolah data. Coba periksa file atau pilihanmu."
 
 
 def _clean(o):
@@ -41,18 +43,18 @@ def _endpoint(fn):
     def run(payload="{}"):
         try:
             return _dumps(fn(**json.loads(payload)))
-        except ValueError as e:  # termasuk GoalError
+        except UserError as e:  # pesan kita sendiri (termasuk GoalError), aman ditampilkan
             return _dumps({"error": str(e)})
-        except Exception as e:
-            return _dumps({"error": f"Terjadi kesalahan tak terduga: {type(e).__name__}: {e}"})
+        except Exception:  # pesan teknis (sering berbahasa Inggris) hanya untuk konsol, tidak ditampilkan
+            return _dumps({"error": _GENERIC, "detail": traceback.format_exc()})
     return run
 
 
 def _need(key="raw"):
     if "raw" not in _S:
-        raise ValueError(_NOT_LOADED)
+        raise UserError(_NOT_LOADED)
     if key not in _S:
-        raise ValueError("Atur variabel dulu di langkah 2." if key == "scores" else "Pilih tujuan analisis dan jalankan pengecekan dulu.")
+        raise UserError("Atur variabel dulu di langkah 2." if key == "scores" else "Pilih tujuan analisis dan jalankan pengecekan dulu.")
 
 
 def _excluded_scores():
@@ -138,9 +140,9 @@ def set_cell(row, column, value):
     _need()
     raw = _S["raw"]
     if column not in raw.columns:
-        raise ValueError(f"Kolom \"{column}\" tidak ditemukan.")
+        raise UserError(f"Kolom \"{column}\" tidak ditemukan.")
     if not 1 <= row <= len(raw):
-        raise ValueError(f"Baris {row} tidak ada di data.")
+        raise UserError(f"Baris {row} tidak ada di data.")
     old, new = _cell(raw.at[row - 1, column]), _cell(value)
     prev = next((f for f in _S["fixes"] if f["row"] == row and f["column"] == column), None)
     if prev:
@@ -157,9 +159,17 @@ def set_cell(row, column, value):
 def prepare(variables, group=None):
     _need()
     group = group or None
+    names = [str(v.get("name") or "").strip() for v in variables]
+    for n in names:
+        if not n:
+            raise UserError("Nama variabel tidak boleh kosong.")
+        if n == "__group":
+            raise UserError("Nama variabel \"__group\" tidak boleh dipakai. Pilih nama lain.")
+        if names.count(n) > 1:
+            raise UserError(f"Nama variabel \"{n}\" dipakai lebih dari sekali.")
     for c in [c for v in variables for c in v["columns"]] + ([group] if group else []):
         if c not in _S["raw"].columns:
-            raise ValueError(f"Kolom \"{c}\" tidak ditemukan.")
+            raise UserError(f"Kolom \"{c}\" tidak ditemukan.")
     scores, info = prep.build_scores(_S["raw"], variables, group)
     for k in ("goal", "alpha", "checks"):
         _S.pop(k, None)
@@ -195,7 +205,7 @@ def remedy(kind, method=None, reasons=None):
         if _S["transform"]:
             _set_transform(next(iter(_S["transform"].values()))["method"])
     else:
-        raise ValueError(f"Jenis perbaikan tidak dikenal: {kind}.")
+        raise UserError(f"Jenis perbaikan tidak dikenal: {kind}.")
     out = {"before": before, "after": _checks(_work(), _S["transform"] is not None)}
     return {"info": _S["transform"], **out} if kind == "transform" else out
 

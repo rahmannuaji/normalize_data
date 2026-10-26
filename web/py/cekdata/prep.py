@@ -49,7 +49,9 @@ def build_scores(df, variables, group=None):
         ranges[v["name"]] = None if not scale else (
             [_num(k * lo), _num(k * hi)] if v["combine"] == "sum" else [_num(lo), _num(hi)])
     if group:
-        scores["__group"] = df.loc[num.index, group]
+        # Kode kelompok 1.0/2.0 (kolom float karena ada sel kosong) ditulis "1"/"2" di label dan laporan.
+        g = df.loc[num.index, group]
+        scores["__group"] = pd.Series([int(v) if isinstance(v, float) and v.is_integer() else v for v in g], index=g.index, dtype=object)
     info = {"n_used": len(scores), "n_dropped": len(dropped), "dropped_rows": dropped,
             "warnings": warnings, "score_range": ranges}
     return scores, info

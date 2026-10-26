@@ -41,3 +41,7 @@ def test_anova_residual_and_paired_and_variable():
     assert [t["label"] for t in build_targets(s, V, "normality_only")] == ["Y1", "X1", "X2"]
     with pytest.raises(GoalError, match="kolom kelompok"):
         build_targets(s.drop(columns="__group"), V, "anova")
+
+def test_correlation_needs_y_and_x():
+    with pytest.raises(GoalError, match="Korelasi butuh minimal satu Y dan satu X"):
+        build_targets(scores(["L", "P"]), [{"name": "Y1", "role": "Y"}, {"name": "X1", "role": "Y"}], "correlation")
