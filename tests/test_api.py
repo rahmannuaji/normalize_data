@@ -183,7 +183,7 @@ def test_report_with_two_x_mentions_both_labels():
     call("prepare", variables=[Y, X, X2], group=None); call("check", goal="regression", alpha=0.05)
     call("remedy", kind="alternative")
     txt = call("report", chosen_id="bootstrap")["text"]
-    assert "X1 → Y1: statistik" in txt and "X2 → Y1: statistik" in txt
+    assert "X1 → Y1: B = " in txt and "X2 → Y1: B = " in txt
 
 
 def test_prepare_rejects_duplicate_empty_and_reserved_names():

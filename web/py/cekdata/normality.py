@@ -106,7 +106,7 @@ def _reason(rule, sw_p, m):
 def check_target(target, goal, alpha=0.05):
     x = np.asarray(target["values"], dtype=float)
     n = len(x)
-    res = {"label": target["label"], "n": n, "tests": [], "moments": None,
+    res = {"label": target["label"], "subject": target.get("subject") or target["label"], "n": n, "tests": [], "moments": None,
            "verdict": {"status": "skipped", "rule": None, "reason": "", "rejected": 0, "total": 0},
            "plot": {"values": x.tolist(), "qq": {"theoretical": [], "sample": [], "rows": []},
                     "pp": {"expected": [], "observed": []}},

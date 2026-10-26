@@ -12,12 +12,14 @@ def scores(groups):
 def test_regression_residuals():
     [t] = build_targets(scores(["L", "P"]), V, "regression")
     assert t["kind"] == "residual" and t["label"] == "Residual regresi: X1, X2 → Y1"
+    assert t["subject"] == "residual model regresi X1 dan X2 terhadap Y1"
     assert abs(t["values"].mean()) < 1e-9 and t["rows"][0] == 11
     assert t["model"]["mahal_p"] is not None
 
 def test_ttest_ind_two_groups():
     ts = build_targets(scores(["L", "P"]), V, "ttest_ind")
     assert [t["label"] for t in ts] == ["Y1 (kelompok L)", "Y1 (kelompok P)"] and ts[0]["groups_n"] == [30, 30]
+    assert ts[0]["subject"] == "Y1 pada kelompok L"
 
 def test_ttest_ind_rejects_three_groups():
     with pytest.raises(GoalError, match="tepat 2 kelompok"):

@@ -219,8 +219,10 @@ def report(chosen_id=None):
     chosen = chosen or None
     tr = None if chosen else _S["transform"]  # alternatif dijalankan pada data tanpa transformasi
     after = _checks(_work(not chosen), not chosen and tr is not None) if (tr or _S["excluded"]) else []
-    return rp.build_report({"goal": _S["goal"], "checks": _S["checks"], "fixes": _S["fixes"], "excluded": _S["excluded"],
-                            "transform": tr, "chosen": chosen, "after": after})
+    posthoc = _S["alternatives"]["posthoc"] if _S["alternatives"] else None
+    return rp.build_report({"goal": _S["goal"], "alpha": _S["alpha"], "checks": _S["checks"], "fixes": _S["fixes"],
+                            "excluded": _S["excluded"], "transform": tr, "chosen": chosen, "after": after,
+                            "posthoc": posthoc})
 
 
 @_endpoint

@@ -8,9 +8,11 @@ REASONS = {"salah_input": "Salah input", "menjawab_asal": "Responden menjawab as
            "di_luar_populasi": "Di luar populasi penelitian"}
 
 
-def _res(id_, name, label, stat, p, ci=None, effect=None, effect_name=None, **extra):
+def _res(id_, name, label, stat_name, stat, p, df=None, ci=None, effect=None, effect_name=None, **extra):
+    """stat_name: simbol statistik untuk laporan (t, F, U, W, H, r, ρ, τ, B); df: angka, [df1, df2], atau None."""
     f = lambda v: None if v is None else float(v)
-    return {"id": id_, "name": name, "label": label, "stat": f(stat), "p": f(p),
+    return {"id": id_, "name": name, "label": label, "stat_name": stat_name, "stat": f(stat), "p": f(p),
+            "df": [f(v) for v in df] if isinstance(df, (list, tuple)) else f(df),
             "ci": None if ci is None else [float(ci[0]), float(ci[1])], "effect": f(effect),
             "effect_name": None if effect is None else effect_name, **extra}
 
@@ -109,15 +111,15 @@ def _corr(scores, ys, xs):
         for x in xs:
             d = scores[[y, x]].dropna().astype(float)
             a, b, n = d[y].to_numpy(), d[x].to_numpy(), len(d)
-            lab = f"{x} → {y}"
+            lab = f"{x} dan {y}"
             r, p = stats.pearsonr(a, b)
-            par.append(_res("pearson", "Pearson", lab, r, p, _fisher_ci(r, n, 1 / np.sqrt(max(n - 3, 1))), r, "r"))
+            par.append(_res("pearson", "Pearson", lab, "r", r, p, ci=_fisher_ci(r, n, 1 / np.sqrt(max(n - 3, 1))), effect=r, effect_name="r"))
             rho, p = stats.spearmanr(a, b)
-            sp.append(_res("spearman", "Spearman", lab, rho, p,
-                           _fisher_ci(rho, n, np.sqrt((1 + rho ** 2 / 2) / max(n - 3, 1))), rho, "ρ"))
+            sp.append(_res("spearman", "Spearman", lab, "ρ", rho, p,
+                           ci=_fisher_ci(rho, n, np.sqrt((1 + rho ** 2 / 2) / max(n - 3, 1))), effect=rho, effect_name="ρ"))
             tau, p = stats.kendalltau(a, b)
             uniq = min(len(np.unique(a)), len(np.unique(b))) / n
-            ke.append(_res("kendall", "Kendall tau-b", lab, tau, p, None, tau, "τ", recommended=bool(uniq < 0.5)))
+            ke.append(_res("kendall", "Kendall tau-b", lab, "τ", tau, p, effect=tau, effect_name="τ", recommended=bool(uniq < 0.5)))
     return par, sp + ke, None
 
 
@@ -133,11 +135,12 @@ def _regr(scores, ys, xs):
         for j, x in enumerate(xs):
             lab = f"{x} → {y}"
             beta = fit.params[x] * d[x].std() / d[y].std()
-            par.append(_res("ols", "Regresi OLS", lab, fit.params[x], fit.pvalues[x], fit.conf_int().loc[x], beta, "β terstandar"))
-            boot.append(_res("bootstrap", "Bootstrap (5.000 sampel)", lab, bs["coef"][j + 1], None,
+            par.append(_res("ols", "Regresi OLS", lab, "B", fit.params[x], fit.pvalues[x], fit.df_resid,
+                            fit.conf_int().loc[x], beta, "β terstandar", t=float(fit.tvalues[x])))
+            boot.append(_res("bootstrap", "Bootstrap (5.000 sampel)", lab, "B", bs["coef"][j + 1], None, None,
                              (bs["ci_low"][j + 1], bs["ci_high"][j + 1]), beta, "β terstandar"))
-            hc.append(_res("hc3", "Galat baku robust (HC3)", lab, rob.params[x], rob.pvalues[x],
-                           rob.conf_int().loc[x], beta, "β terstandar"))
+            hc.append(_res("hc3", "Galat baku robust (HC3)", lab, "B", rob.params[x], rob.pvalues[x], rob.df_resid,
+                           rob.conf_int().loc[x], beta, "β terstandar", t=float(rob.tvalues[x])))
     return par, boot + hc, None
 
 
@@ -155,10 +158,10 @@ def _ind(scores, ys, xs):
         t = stats.ttest_ind(a, b, equal_var=False)
         ci = t.confidence_interval()
         sp = np.sqrt(((len(a) - 1) * a.var(ddof=1) + (len(b) - 1) * b.var(ddof=1)) / (len(a) + len(b) - 2))
-        par.append(_res("welch", "Uji-t Welch", lab, t.statistic, t.pvalue, (ci.low, ci.high),
+        par.append(_res("welch", "Uji-t Welch", lab, "t", t.statistic, t.pvalue, t.df, (ci.low, ci.high),
                         (a.mean() - b.mean()) / sp, "d (Cohen)"))
         u = stats.mannwhitneyu(a, b, alternative="two-sided")
-        alt.append(_res("mannwhitney", "Mann-Whitney U", lab, u.statistic, u.pvalue, None,
+        alt.append(_res("mannwhitney", "Mann-Whitney U", lab, "U", u.statistic, u.pvalue, None, None,
                         2 * u.statistic / (len(a) * len(b)) - 1, "r rank-biserial"))
     return par, alt, None
 
@@ -169,13 +172,13 @@ def _paired(scores, ys, xs):
     lab = f"{ys[1]} − {ys[0]}"
     t = stats.ttest_1samp(diff, 0.0)
     ci = t.confidence_interval()
-    par = [_res("paired", "Uji-t berpasangan", lab, t.statistic, t.pvalue, (ci.low, ci.high),
+    par = [_res("paired", "Uji-t berpasangan", lab, "t", t.statistic, t.pvalue, t.df, (ci.low, ci.high),
                 diff.mean() / diff.std(ddof=1), "d_z")]
     nz = diff[diff != 0]
     rk = stats.rankdata(np.abs(nz))
     rbc = (rk[nz > 0].sum() - rk[nz < 0].sum()) / rk.sum() if len(nz) else 0.0
     w = stats.wilcoxon(diff)
-    return par, [_res("wilcoxon", "Wilcoxon signed-rank", lab, w.statistic, w.pvalue, None, rbc, "r rank-biserial")], None
+    return par, [_res("wilcoxon", "Wilcoxon signed-rank", lab, "W", w.statistic, w.pvalue, None, None, rbc, "r rank-biserial")], None
 
 
 def _anova(scores, ys, xs):
@@ -184,15 +187,15 @@ def _anova(scores, ys, xs):
         lv, gs = _groups(scores, y)
         lab = f"{y}: {', '.join(map(str, lv))}"
         allv = np.concatenate(gs)
-        n = len(allv)
+        n, k = len(allv), len(gs)
         f = stats.f_oneway(*gs)
         ssb = sum(len(g) * (g.mean() - allv.mean()) ** 2 for g in gs)
-        par.append(_res("anova", "ANOVA satu arah", lab, f.statistic, f.pvalue, None,
+        par.append(_res("anova", "ANOVA satu arah", lab, "F", f.statistic, f.pvalue, [k - 1, n - k], None,
                         ssb / ((allv - allv.mean()) ** 2).sum(), "η²"))
         h = stats.kruskal(*gs)
-        alt.append(_res("kruskal", "Kruskal-Wallis", lab, h.statistic, h.pvalue, None, h.statistic / (n - 1), "ε²"))
+        alt.append(_res("kruskal", "Kruskal-Wallis", lab, "H", h.statistic, h.pvalue, k - 1, None, h.statistic / (n - 1), "ε²"))
         d = scores[[y, "__group"]].dropna()
-        post += [{**r, "label": f"{y}: {r['a']} vs {r['b']}"}
+        post += [{**r, "y": y, "label": f"{y}: {r['a']} vs {r['b']}"}
                  for r in dunn(d[y].to_numpy(), d["__group"].to_numpy())]
     return par, alt, post
 

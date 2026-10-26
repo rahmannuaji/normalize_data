@@ -9,7 +9,6 @@ const REASONS = { salah_input: "Salah input", menjawab_asal: "Responden menjawab
 const LABEL = { ok: ["circle-check", "Dianjurkan"], warn: ["triangle-alert", "Boleh dengan catatan"], bad: ["circle-x", "Hati-hati"] };
 const METHODS = [["log", "Logaritma"], ["sqrt", "Akar kuadrat"], ["reciprocal", "Kebalikan"], ["boxcox", "Box-Cox"], ["yeojohnson", "Yeo-Johnson"], [null, "Tanpa transformasi"]];
 const METHOD_NAME = { log: "logaritma natural", sqrt: "akar kuadrat", reciprocal: "kebalikan (1/x)", boxcox: "Box-Cox", yeojohnson: "Yeo-Johnson" };
-const STAT = { ols: "B", bootstrap: "B", hc3: "B", pearson: "r", spearman: "ρ", kendall: "τ", welch: "t", mannwhitney: "U", paired: "t", wilcoxon: "W", anova: "F", kruskal: "H" };
 
 const note = (kind, ic, ...kids) => h("div", { class: `note ${kind}` }, icon(ic), h("span", {}, ...kids));
 const targetN = () => Math.min(...state.check.map((c) => c.n));
@@ -106,16 +105,24 @@ function needText() {
 const fillNeed = (body) => body.append(h("p", {}, needText()), h("p", { class: "caption" }, "Rujukan: Kim (2013); Ghasemi & Zahediasl (2012). Lihat daftar di langkah 7."));
 
 // ---------- Kartu 3: uji alternatif ----------
+// Simbol dan df dari engine (stat_name, df), sama dengan kalimat laporan: t(df), F(df1, df2), U, W, H(df), r, ρ, τ, B.
+const dfText = (df) => (df == null ? "" : `(${[].concat(df).map((d) => (Number.isInteger(d) ? String(d) : fmt(d, 2))).join(", ")})`);
+function statText(r) {
+  if (r.stat_name === "B") return `B = ${fmt(r.stat, 3)}` + (r.t != null ? `; t${dfText(r.df)} = ${fmt(r.t, 2)}` : "");
+  const v = ["U", "W"].includes(r.stat_name) ? (Number.isInteger(r.stat) ? String(r.stat) : fmt(r.stat, 1)) : fmt(r.stat, 2);
+  return `${r.stat_name}${dfText(r.df)} = ${v}`;
+}
 function resultCard(r, canPick, many) {
   const picked = state.chosenId === r.id;
   const lines = [];
-  if (r.stat != null) lines.push(h("div", {}, h("b", {}, `${STAT[r.id] || "Statistik"} = ${fmt(r.stat, 2)}`), r.p != null ? `, p ${r.p < 0.001 ? fmtP(r.p) : "= " + fmtP(r.p)}` : ""));
+  const d = r.stat_name === "B" ? 3 : 2;
+  if (r.stat != null) lines.push(h("div", {}, h("b", {}, statText(r)), r.p != null ? `, p ${r.p < 0.001 ? fmtP(r.p) : "= " + fmtP(r.p)}` : ""));
   if (r.ci) {
     const cross = r.ci[0] <= 0 && r.ci[1] >= 0;
-    lines.push(h("div", { class: "small" }, `CI 95% [${fmt(r.ci[0], 2)}; ${fmt(r.ci[1], 2)}]`),
+    lines.push(h("div", { class: "small" }, `CI 95% [${fmt(r.ci[0], d)}; ${fmt(r.ci[1], d)}]`),
       h("div", { class: `small ${cross ? "" : "yes"}` }, icon(cross ? "circle-slash" : "circle-check"), cross ? "melewati 0" : "tidak melewati 0"));
   }
-  if (r.effect != null) lines.push(h("div", { class: "caption" }, `${r.effect_name}: ${fmt(r.effect, 2)}`));
+  if (r.effect != null && r.effect !== r.stat) lines.push(h("div", { class: "caption" }, `${r.effect_name}: ${fmt(r.effect, 2)}`));
   const btn = canPick ? h("button", { type: "button", class: `btn small${picked ? "" : " primary"}`, "aria-pressed": String(picked), onclick: () => { state.chosenId = picked ? null : r.id; renderAlt(); } },
     picked ? [icon("circle-check"), "Dipakai di laporan"] : "Pakai ini di laporan") : null;
   const all = canPick && many ? h("div", { class: "caption" }, "Berlaku untuk semua pasangan variabel.") : null;
